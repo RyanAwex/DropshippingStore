@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import supabase from '../utils/supabase';
+import { useAuthStore } from '../stores/authStore';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { signup, login, isLoading, error } = useAuthStore();
   const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
   // Form State
@@ -15,44 +15,26 @@ const Auth = () => {
     password: '',
     fullName: ''
   });
-  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(''); // Clear error on typing
   };
 
   const handleAuth = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
 
     try {
       if (isSignUp) {
         // --- SIGN UP LOGIC ---
-        const { error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: { data: { full_name: formData.fullName } }
-        });
-        if (error) throw error;
+        await signup(formData.email, formData.password, { data: { full_name: formData.fullName } });
         navigate('/'); // Redirect after success
       } else {
         // --- SIGN IN LOGIC ---
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-        if (error) throw error;
+        await login(formData.email, formData.password);
         navigate('/'); // Redirect after success
       }
-      
-      // Simulation for smooth effect
-      setTimeout(() => setLoading(false), 1500);
-
-    } catch (err) {
-      setError(err.message);
-      setLoading(false);
+    } catch {
+      // Error handled in store
     }
   };
 
@@ -160,12 +142,12 @@ const Auth = () => {
             {/* Submit Button - Curtain Effect */}
             <button 
               type="submit" 
-              disabled={loading}
+              disabled={isLoading}
               className="w-full group relative px-8 py-4 border border-black overflow-hidden bg-black text-white disabled:opacity-70 disabled:cursor-not-allowed"
             >
               <span className="absolute inset-0 w-full h-full bg-white translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0"></span>
               <span className="relative z-10 w-full flex justify-center items-center text-xs font-bold uppercase tracking-widest group-hover:text-black transition-colors duration-300">
-                {loading ? (
+                {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <span className="flex items-center">
