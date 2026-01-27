@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// import { supabase } from '../utils/supabaseClient'; // Uncomment when you have your client set up
+import supabase from '../utils/supabase';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -30,26 +30,21 @@ const Auth = () => {
     try {
       if (isSignUp) {
         // --- SIGN UP LOGIC ---
-        /* const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: { data: { full_name: formData.fullName } }
         });
         if (error) throw error;
-        */
-        console.log("Signing up...", formData);
-        // navigate('/dashboard'); // Redirect after success
+        navigate('/'); // Redirect after success
       } else {
         // --- SIGN IN LOGIC ---
-        /*
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
         if (error) throw error;
-        */
-        console.log("Signing in...", formData);
-        // navigate('/dashboard'); // Redirect after success
+        navigate('/'); // Redirect after success
       }
       
       // Simulation for smooth effect

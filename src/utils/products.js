@@ -6,6 +6,7 @@ export const products = [
     price: 185.0,
     rating: 4.8,
     reviews: 124,
+    stock: 25,
     description:
       "A timeless staple for the modern wardrobe. Crafted from heavyweight Belgian linen, this chore coat features a boxy, relaxed fit designed for layering. Finished with reinforced stitching and sustainable corozo buttons.",
     details: [
@@ -44,6 +45,7 @@ export const products = [
     price: 210.0,
     rating: 4.9,
     reviews: 86,
+    stock: 15,
     description:
       "Handcrafted in Italy from full-grain leather. Features a durable rubber sole and a cushioned footbed for all-day comfort.",
     details: [
@@ -81,6 +83,7 @@ export const products = [
     price: 850.0,
     rating: 5.0,
     reviews: 42,
+    stock: 8,
     description:
       "A mid-century inspired lounge chair with a solid wood frame and premium wool blend upholstery.",
     details: [
@@ -117,6 +120,7 @@ export const products = [
   price: 349.00,
   rating: 4.7,
   reviews: 215,
+  stock: 30,
   description: "Industry-leading noise cancellation with 30-hour battery life and premium audio fidelity.",
   details: ["Active Noise Cancellation", "Transparency Mode", "USB-C Fast Charging", "Bluetooth 5.2"],
   images: [
@@ -146,6 +150,7 @@ export const products = [
     price: 129.0,
     rating: 4.6,
     reviews: 98,
+    stock: 40,
     description:
       "Voice-controlled smart speaker with premium sound quality and seamless smart home integration.",
     details: [
@@ -182,6 +187,7 @@ export const products = [
     price: 199.0,
     rating: 4.9,
     reviews: 67,
+    stock: 20,
     description:
       "Durable and spacious hiking backpack with weather-resistant materials and ergonomic design for all-day comfort.",
     details: [
@@ -218,6 +224,7 @@ export const products = [
     price: 120.0,
     rating: 4.8,
     reviews: 150,
+    stock: 12,
     description:
       "High-carbon stainless steel chef's knife with ergonomic handle for precision cutting and durability.",
     details: [

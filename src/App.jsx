@@ -7,6 +7,7 @@ import Checkout from './pages/Checkout'
 import Product from './pages/Product'
 import Auth from './pages/Auth'
 import ForgotPassword from './pages/ForgotPassword'
+import Dashboard from './pages/Dashboard'
 
 function App() {
   function ScrollToTop() {
@@ -27,6 +28,7 @@ function App() {
         <Route path='/shop' element={<Shop />} />
         <Route path='/cart' element={<Cart />} />
         <Route path='/checkout' element={<Checkout />} />
+        <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/auth' element={<Auth />} />
         <Route path='/forgot-password' element={<ForgotPassword />} />
       </Routes>
