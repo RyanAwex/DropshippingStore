@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ShoppingCart, Search, Menu, User, X } from "lucide-react";
+import { ShoppingCart, Search, Menu, User, X, ChevronDown } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { products } from "../utils/products";
 import ProductCard from "../components/ProductCard";
@@ -50,7 +50,7 @@ const Home = () => {
             Menu
           </span>
           <button onClick={() => setIsMenuOpen(false)}>
-            <X className="w-6 h-6 text-black" />
+            <X className="w-5 h-5 text-black" />
           </button>
         </div>
 
@@ -93,20 +93,48 @@ const Home = () => {
               Account
             </p>
             <div className="grid grid-cols-2 gap-4">
-              <Link
-                to="/login"
-                onClick={() => setIsMenuOpen(false)}
-                className="py-4 bg-black text-white text-xs font-bold uppercase tracking-widest text-center"
-              >
-                Login
-              </Link>
-              <Link
-                to="/signup"
-                onClick={() => setIsMenuOpen(false)}
-                className="py-4 border border-black text-black text-xs font-bold uppercase tracking-widest text-center"
-              >
-                Sign Up
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  {user?.isAdmin ? (
+                    <Link
+                      to="/admin/dashboard"
+                      className="w-full py-3 border border-black text-black text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-50 transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/user/profile"
+                      className="w-full py-3 border border-black text-black text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-50 transition-colors"
+                    >
+                      Profile
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => logout()}
+                    className="w-full py-3 bg-black text-white text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-800 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/auth"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="py-4 bg-black text-white text-xs font-bold uppercase tracking-widest text-center"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/auth"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="py-4 border border-black text-black text-xs font-bold uppercase tracking-widest text-center"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -211,13 +239,13 @@ const Home = () => {
             onClick={() => setIsMenuOpen(true)}
             className="md:hidden focus:outline-none"
           >
-            <Menu className="w-6 h-6 cursor-pointer" />
+            <Menu className="w-5 h-5 cursor-pointer" />
           </button>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <header className="relative h-[60vh] min-h-[600px] flex items-center justify-center bg-gray-100 text-center">
+      <header className="relative h-[60vh] min-h-[calc(100vh-80.79px)] sm:min-h-[600px] flex items-center justify-center bg-gray-100 text-center">
         <div
           className="absolute inset-0 overflow-hidden"
           style={{
@@ -246,6 +274,9 @@ const Home = () => {
               View All Products
             </span>
           </Link>
+          <div className="flex justify-center items-end">
+            <ChevronDown className="w-6 h-6 text-white mt-8 mx-auto animate-bounce" />
+          </div>
         </div>
       </header>
 

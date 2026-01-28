@@ -48,7 +48,7 @@ const ExpirationDatePicker = () => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 20 }, (_, i) => currentYear + i);
   const months = Array.from({ length: 12 }, (_, i) =>
-    (i + 1).toString().padStart(2, "0")
+    (i + 1).toString().padStart(2, "0"),
   );
 
   useEffect(() => {
@@ -71,9 +71,7 @@ const ExpirationDatePicker = () => {
 
   return (
     <div className="relative w-full bg-white" ref={containerRef}>
-      <style>
-        {` .no-scrollbar::-webkit-scrollbar { display: none; } `}
-      </style>
+      <style>{` .no-scrollbar::-webkit-scrollbar { display: none; } `}</style>
 
       <div
         onClick={() => setIsOpen(!isOpen)}
@@ -93,7 +91,9 @@ const ExpirationDatePicker = () => {
       {isOpen && (
         <div className="absolute top-full left-0 w-full bg-white border border-black z-50 mt-[-1px] shadow-xl flex h-56">
           <div className="w-1/2 overflow-y-auto border-r border-gray-100 no-scrollbar">
-            <div className="p-2 text-xs font-bold uppercase tracking-widest text-gray-400 sticky top-0 bg-white border-b border-gray-50">Month</div>
+            <div className="p-2 text-xs font-bold uppercase tracking-widest text-gray-400 sticky top-0 bg-white border-b border-gray-50">
+              Month
+            </div>
             {months.map((month) => (
               <div
                 key={month}
@@ -105,7 +105,9 @@ const ExpirationDatePicker = () => {
             ))}
           </div>
           <div className="w-1/2 overflow-y-auto no-scrollbar">
-            <div className="p-2 text-xs font-bold uppercase tracking-widest text-gray-400 sticky top-0 bg-white border-b border-gray-50">Year</div>
+            <div className="p-2 text-xs font-bold uppercase tracking-widest text-gray-400 sticky top-0 bg-white border-b border-gray-50">
+              Year
+            </div>
             {years.map((year) => (
               <div
                 key={year}
@@ -129,7 +131,11 @@ const PaymentButton = ({ id, label, icon: Icon, isSelected, onSelect }) => (
     className={`flex flex-col items-center justify-center gap-3 border p-4 text-sm transition-all duration-200 h-24
       ${isSelected ? "bg-black text-white border-black" : "bg-white text-black border-gray-200 hover:border-black hover:bg-gray-50"}`}
   >
-    {Icon && <Icon className={`h-6 w-auto ${isSelected ? "text-white" : "text-black"}`} />}
+    {Icon && (
+      <Icon
+        className={`h-6 w-auto ${isSelected ? "text-white" : "text-black"}`}
+      />
+    )}
     <span className="font-medium uppercase tracking-wider text-[10px]">
       {label}
     </span>
@@ -139,23 +145,24 @@ const PaymentButton = ({ id, label, icon: Icon, isSelected, onSelect }) => (
 // --- Main Checkout Component ---
 const Checkout = () => {
   const [cardNumber, setCardNumber] = useState("");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("credit-card");
-  
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState("credit-card");
+
   // --- Coupon Logic States ---
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [couponSuccess, setCouponSuccess] = useState("");
 
-  const subtotal = 90.00;
+  const subtotal = 90.0;
 
-  const shipping = subtotal > 100 ? 0.00 : 10.00;
-  
+  const shipping = subtotal > 100 ? 0.0 : 10.0;
+
   // Calculate Discount (assuming discountValue is percentage)
-  const discountAmount = appliedCoupon 
-    ? (subtotal * appliedCoupon.discountValue) / 100 
+  const discountAmount = appliedCoupon
+    ? (subtotal * appliedCoupon.discountValue) / 100
     : 0;
-  
+
   const total = subtotal - discountAmount;
 
   const handleApplyCoupon = () => {
@@ -169,7 +176,7 @@ const Checkout = () => {
     if (!codeToApply) return;
 
     // 1. Find Coupon
-    const coupon = coupons.find(c => c.code === codeToApply);
+    const coupon = coupons.find((c) => c.code === codeToApply);
 
     if (!coupon) {
       setCouponError("This coupon doesn't exist");
@@ -186,13 +193,17 @@ const Checkout = () => {
 
     // 3. Check Usage Limit
     if (coupon.usageLimit !== null && coupon.timesUsed >= coupon.usageLimit) {
-      setCouponError(`Coupon was available only for ${coupon.usageLimit} users`);
+      setCouponError(
+        `Coupon was available only for ${coupon.usageLimit} users`,
+      );
       return;
     }
 
     // 4. Success
     setAppliedCoupon(coupon);
-    setCouponSuccess(`Coupon applied: ${coupon.code} (-${coupon.discountValue}%)`);
+    setCouponSuccess(
+      `Coupon applied: ${coupon.code} (-${coupon.discountValue}%)`,
+    );
   };
 
   return (
@@ -213,29 +224,46 @@ const Checkout = () => {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
-        
         {/* Left Column */}
         <div className="flex-grow space-y-12">
           {/* ... Contact & Shipping Sections (Same as before) ... */}
           <section>
-            <h2 className="text-sm font-bold uppercase tracking-widest mb-6 border-b border-gray-100 pb-2">Contact Information</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest mb-6 border-b border-gray-100 pb-2">
+              Contact Information
+            </h2>
             <div className="space-y-4">
-               <div className="flex flex-col">
-                  <label className="text-xs uppercase font-bold text-gray-400 mb-2">Email Address</label>
-                  <input type="email" placeholder="you@example.com" className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors"/>
-               </div>
-               <div className="flex items-center space-x-2">
-                 <input type="checkbox" id="newsletter" className="accent-black w-4 h-4" />
-                 <label htmlFor="newsletter" className="text-sm text-gray-500">Email me with news and offers</label>
-               </div>
+              <div className="flex flex-col">
+                <label className="text-xs uppercase font-bold text-gray-400 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="newsletter"
+                  className="accent-black w-4 h-4"
+                />
+                <label htmlFor="newsletter" className="text-sm text-gray-500">
+                  Email me with news and offers
+                </label>
+              </div>
             </div>
           </section>
 
           <section>
-            <h2 className="text-sm font-bold uppercase tracking-widest mb-6 border-b border-gray-100 pb-2">Shipping Address</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest mb-6 border-b border-gray-100 pb-2">
+              Shipping Address
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col md:col-span-2">
-                <label className="text-xs uppercase font-bold text-gray-400 mb-2">Country/Region</label>
+                <label className="text-xs uppercase font-bold text-gray-400 mb-2">
+                  Country/Region
+                </label>
                 <div className="relative w-full">
                   <select className="w-full appearance-none border border-gray-200 px-4 py-3 pr-10 text-sm bg-white focus:outline-none focus:border-black transition-colors cursor-pointer rounded-none">
                     <option>United States</option>
@@ -245,48 +273,124 @@ const Checkout = () => {
                 </div>
               </div>
               <div className="flex flex-col">
-                <label className="text-xs uppercase font-bold text-gray-400 mb-2">First Name</label>
-                <input type="text" className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"/>
+                <label className="text-xs uppercase font-bold text-gray-400 mb-2">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
+                />
               </div>
               <div className="flex flex-col">
-                <label className="text-xs uppercase font-bold text-gray-400 mb-2">Last Name</label>
-                <input type="text" className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"/>
+                <label className="text-xs uppercase font-bold text-gray-400 mb-2">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
+                />
               </div>
             </div>
           </section>
 
           {/* Payment Section */}
           <section>
-            <h2 className="text-sm font-bold uppercase tracking-widest mb-6 border-b border-gray-100 pb-2">Payment Method</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest mb-6 border-b border-gray-100 pb-2">
+              Payment Method
+            </h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-              <PaymentButton id="credit-card" label="Card" icon={CreditCard} isSelected={selectedPaymentMethod === "credit-card"} onSelect={setSelectedPaymentMethod} />
-              <PaymentButton id="paypal" label="PayPal" icon={PayPalIcon} isSelected={selectedPaymentMethod === "paypal"} onSelect={setSelectedPaymentMethod} />
-              <PaymentButton id="google-pay" label="G Pay" icon={GooglePayIcon} isSelected={selectedPaymentMethod === "google-pay"} onSelect={setSelectedPaymentMethod} />
-              <PaymentButton id="apple-pay" label="Apple Pay" icon={ApplePayIcon} isSelected={selectedPaymentMethod === "apple-pay"} onSelect={setSelectedPaymentMethod} />
+              <PaymentButton
+                id="credit-card"
+                label="Card"
+                icon={CreditCard}
+                isSelected={selectedPaymentMethod === "credit-card"}
+                onSelect={setSelectedPaymentMethod}
+              />
+              <PaymentButton
+                id="paypal"
+                label="PayPal"
+                icon={PayPalIcon}
+                isSelected={selectedPaymentMethod === "paypal"}
+                onSelect={setSelectedPaymentMethod}
+              />
+              <PaymentButton
+                id="google-pay"
+                label="G Pay"
+                icon={GooglePayIcon}
+                isSelected={selectedPaymentMethod === "google-pay"}
+                onSelect={setSelectedPaymentMethod}
+              />
+              <PaymentButton
+                id="apple-pay"
+                label="Apple Pay"
+                icon={ApplePayIcon}
+                isSelected={selectedPaymentMethod === "apple-pay"}
+                onSelect={setSelectedPaymentMethod}
+              />
             </div>
 
             {selectedPaymentMethod === "credit-card" ? (
               <div className="border border-gray-200 p-6 rounded-sm bg-gray-50/50 animation-fade-in">
                 <div className="flex items-center justify-between mb-6">
-                  <span className="flex items-center text-sm font-bold uppercase tracking-wide">Card Details</span>
+                  <span className="flex items-center text-sm font-bold uppercase tracking-wide">
+                    Card Details
+                  </span>
                   <div className="flex space-x-2">
-                     <div className="w-8 h-5 bg-white border border-gray-200 rounded flex items-center justify-center"><MoreHorizontal size={14} /></div>
+                    <div className="w-8 h-5 bg-white border border-gray-200 rounded flex items-center justify-center">
+                      <img src="/payments/Mastercard.svg" alt="Mastercard Card" />
+                    </div>
+                    <div className="w-8 h-5 bg-white border border-gray-200 rounded flex items-center justify-center">
+                      <img src="/payments/Visa.svg" alt="Visa Card" />
+                    </div>
+                    <div className="w-8 h-5 bg-white border border-gray-200 rounded flex items-center justify-center">
+                      <img src="/payments/American_Express.svg" alt="American Express Card" />
+                    </div>
+                    <div className="w-8 h-5 bg-white border border-gray-200 rounded flex items-center justify-center">
+                      <MoreHorizontal size={14} />
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <input type="text" placeholder="Name on Card" className="w-full border border-gray-200 px-4 py-3 text-sm bg-white focus:outline-none focus:border-black" />
-                  <input type="text" placeholder="Card Number" value={cardNumber} maxLength={19} onChange={(e) => { const value = e.target.value.replace(/\s/g, ""); const formatted = value.replace(/(\d{4})(?=\d)/g, "$1 "); setCardNumber(formatted); }} className="w-full border border-gray-200 px-4 py-3 text-sm bg-white focus:outline-none focus:border-black" />
+                  <input
+                    type="text"
+                    placeholder="Name on Card"
+                    className="w-full border border-gray-200 px-4 py-3 text-sm bg-white focus:outline-none focus:border-black"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Card Number"
+                    value={cardNumber}
+                    maxLength={19}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\s/g, "");
+                      const formatted = value.replace(/(\d{4})(?=\d)/g, "$1 ");
+                      setCardNumber(formatted);
+                    }}
+                    className="w-full border border-gray-200 px-4 py-3 text-sm bg-white focus:outline-none focus:border-black"
+                  />
                   <div className="grid grid-cols-2 gap-4">
                     <ExpirationDatePicker />
-                    <input type="text" placeholder="CVC" maxLength={4} className="w-full border border-gray-200 px-4 py-3 text-sm bg-white focus:outline-none focus:border-black" />
+                    <input
+                      type="text"
+                      placeholder="CVC"
+                      maxLength={4}
+                      className="w-full border border-gray-200 px-4 py-3 text-sm bg-white focus:outline-none focus:border-black"
+                    />
                   </div>
                 </div>
-                <div className="flex items-center mt-6 text-gray-500 text-xs"><Lock className="w-3 h-3 mr-1" /> Payments are secure and encrypted.</div>
+                <div className="flex items-center mt-6 text-gray-500 text-xs">
+                  <Lock className="w-3 h-3 mr-1" /> Payments are secure and
+                  encrypted.
+                </div>
               </div>
             ) : (
               <div className="border border-gray-200 p-8 rounded-sm bg-gray-50/30 text-center flex flex-col items-center justify-center min-h-[250px]">
-                <p className="text-xs text-gray-500 mb-6">You will be redirected to a secure checkout page.</p>
-                <button className="px-8 py-3 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">Proceed to Payment</button>
+                <p className="text-xs text-gray-500 mb-6">
+                  You will be redirected to a secure checkout page.
+                </p>
+                <button className="px-8 py-3 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">
+                  Proceed to Payment
+                </button>
               </div>
             )}
           </section>
@@ -295,17 +399,27 @@ const Checkout = () => {
         {/* Right Column: Order Summary */}
         <div className="lg:w-96 flex-shrink-0">
           <div className="bg-gray-50 p-8 sticky top-10">
-            <h2 className="text-sm font-bold uppercase tracking-widest mb-6">Order Summary</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest mb-6">
+              Order Summary
+            </h2>
 
             <div className="space-y-4 mb-8 border-b border-gray-200 pb-8">
               {[1, 2].map((item) => (
                 <div key={item} className="flex gap-4">
                   <div className="w-16 h-16 bg-white border border-gray-200 relative">
-                    <img src="https://placehold.co/100x100/e0e0e0/333" alt="Item" className="w-full h-full object-cover" />
-                    <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">1</span>
+                    <img
+                      src="https://placehold.co/100x100/e0e0e0/333"
+                      alt="Item"
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
+                      1
+                    </span>
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-xs font-bold uppercase tracking-wide">Minimalist Vase</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wide">
+                      Minimalist Vase
+                    </h4>
                     <p className="text-xs text-gray-500 mt-1">Stone Grey</p>
                   </div>
                   <div className="text-sm font-medium">$45.00</div>
@@ -323,20 +437,24 @@ const Checkout = () => {
                   onChange={(e) => setCouponInput(e.target.value)}
                   className="flex-grow border border-gray-200 p-3 text-sm focus:outline-none focus:border-black"
                 />
-                <button 
+                <button
                   onClick={handleApplyCoupon}
                   className="px-4 bg-gray-200 text-gray-500 text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
                 >
                   Apply
                 </button>
               </div>
-              
+
               {/* Feedback Messages */}
               {couponSuccess && (
-                <p className="text-xs text-green-600 font-medium mt-2">{couponSuccess}</p>
+                <p className="text-xs text-green-600 font-medium mt-2">
+                  {couponSuccess}
+                </p>
               )}
               {couponError && (
-                <p className="text-xs text-red-500 font-medium mt-2">{couponError}</p>
+                <p className="text-xs text-red-500 font-medium mt-2">
+                  {couponError}
+                </p>
               )}
             </div>
 
@@ -350,7 +468,7 @@ const Checkout = () => {
                 <span>Shipping</span>
                 <span>${shipping.toFixed(2)}</span>
               </div>
-              
+
               {/* Discount Row (Only visible if coupon applied) */}
               {appliedCoupon && (
                 <div className="flex justify-between text-green-600 font-medium">
