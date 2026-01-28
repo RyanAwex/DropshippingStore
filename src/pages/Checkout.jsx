@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { coupons } from "../utils/coupons"; // Ensure this path matches your project structure
+import {useCartStore} from "../stores/cartStore";
 
 // --- Custom Brand Icons (Inline SVGs) ---
 const GooglePayIcon = ({ className }) => (
@@ -153,17 +154,19 @@ const Checkout = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [couponSuccess, setCouponSuccess] = useState("");
+  const {cartItems, getCartTotal} = useCartStore();
 
-  const subtotal = 90.0;
-
-  const shipping = subtotal > 100 ? 0.0 : 10.0;
-
-  // Calculate Discount (assuming discountValue is percentage)
+  const subtotal = getCartTotal();
+  
   const discountAmount = appliedCoupon
-    ? (subtotal * appliedCoupon.discountValue) / 100
-    : 0;
+  ? (subtotal * appliedCoupon.discountValue) / 100
+  : 0;
 
-  const total = subtotal - discountAmount;
+  const totalBeforeShipping = subtotal - discountAmount;
+
+  const shipping = totalBeforeShipping > 0 ? totalBeforeShipping > 100 ? 0 : 15 : 0;
+
+  const total = totalBeforeShipping + shipping;
 
   const handleApplyCoupon = () => {
     // Reset messages
@@ -211,14 +214,14 @@ const Checkout = () => {
       {/* Header */}
       <div className="flex items-center mb-12">
         <Link
-          to="/cart"
+          to="/user/cart"
           className="flex items-center text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-black transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" /> Return to Cart
         </Link>
         <div className="mx-auto pr-24 hidden md:block">
           <span className="text-2xl font-bold tracking-widest uppercase">
-            Aurum Checkout
+            Vraxia Checkout
           </span>
         </div>
       </div>
@@ -404,25 +407,27 @@ const Checkout = () => {
             </h2>
 
             <div className="space-y-4 mb-8 border-b border-gray-200 pb-8">
-              {[1, 2].map((item) => (
-                <div key={item} className="flex gap-4">
+              {cartItems.map((item) => (
+                <div key={item.cartId} className="flex gap-4">
                   <div className="w-16 h-16 bg-white border border-gray-200 relative">
                     <img
-                      src="https://placehold.co/100x100/e0e0e0/333"
-                      alt="Item"
+                      src={item.image}
+                      alt={item.title}
                       className="w-full h-full object-cover"
                     />
                     <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
-                      1
+                      {item.quantity}
                     </span>
                   </div>
                   <div className="flex-1">
                     <h4 className="text-xs font-bold uppercase tracking-wide">
-                      Minimalist Vase
+                      {item.title}
                     </h4>
-                    <p className="text-xs text-gray-500 mt-1">Stone Grey</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {Object.entries(item.selectedOptions).map(([value]) => `${value}`).join(' | ')}
+                    </p>
                   </div>
-                  <div className="text-sm font-medium">$45.00</div>
+                  <div className="text-sm font-medium">${item.price.toFixed(2)}</div>
                 </div>
               ))}
             </div>
@@ -466,7 +471,7 @@ const Checkout = () => {
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span>${shipping.toFixed(2)}</span>
+                <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
               </div>
 
               {/* Discount Row (Only visible if coupon applied) */}

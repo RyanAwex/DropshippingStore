@@ -25,12 +25,12 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route path='/' element={<Home />} />
-        <Route path='/product/:id' element={<Product />} />
         <Route path='/shop' element={<Shop />} />
-        <Route path='/cart' element={<Cart />} />
-        <Route path='/checkout' element={<Checkout />} />
+        <Route path='/shop/product/:id' element={<Product />} />
+        <Route path='/user/cart' element={<Cart />} />
+        <Route path='/user/checkout' element={<Checkout />} />
         <Route path='/user/profile' element={<Profile />} />
-        <Route path='/dashboard' element={<Dashboard />} />
+        <Route path='/admin/dashboard' element={<Dashboard />} />
         <Route path='/auth' element={<Auth />} />
         <Route path='/forgot-password' element={<ForgotPassword />} />
       </Routes>

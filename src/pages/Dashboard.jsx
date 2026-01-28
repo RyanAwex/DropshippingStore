@@ -7,7 +7,6 @@ import {
   Pencil, 
   Trash2, 
   X, 
-  Search,
   MoreVertical,
   CheckCircle,
   AlertCircle,
@@ -20,6 +19,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { products as initialProductsData } from '../utils/products';
+import { CATEGORIES } from '../utils/categories';
 
 // --- UTILS & COMPONENTS ---
 
@@ -38,7 +38,7 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-// 2. Custom Select Component (Fixes alignment and appearance)
+// 2. Custom Select Component
 const CustomSelect = ({ value, onChange, options, placeholder = "Select..." }) => (
   <div className="relative w-full group">
     <select 
@@ -55,7 +55,102 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select..." }) =
   </div>
 );
 
-// 3. Stat Card
+// 3. Multi-Select Category Popup
+const CategorySelector = ({ selectedCategories = [], onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Helper to safely check category existence
+  const isSelected = (cat) => Array.isArray(selectedCategories) && selectedCategories.includes(cat);
+
+  const toggleCategory = (cat) => {
+    if (isSelected(cat)) {
+      onChange(selectedCategories.filter(c => c !== cat));
+    } else {
+      onChange([...selectedCategories, cat]);
+    }
+  };
+
+  const removeCategory = (e, cat) => {
+    e.stopPropagation();
+    onChange(selectedCategories.filter(c => c !== cat));
+  };
+
+  return (
+    <>
+      {/* Trigger Box */}
+      <div 
+        onClick={() => setIsOpen(true)}
+        className="w-full border border-gray-200 p-3 min-h-[50px] flex flex-wrap gap-2 cursor-pointer bg-white hover:border-black transition-colors items-center group"
+      >
+        {(!selectedCategories || selectedCategories.length === 0) ? (
+          <span className="text-sm text-gray-400">Select Categories...</span>
+        ) : (
+          selectedCategories.map(cat => (
+            <span key={cat} className="text-[10px] font-bold uppercase bg-gray-100 px-3 py-1 flex items-center gap-2 transition-all hover:bg-gray-200">
+              {cat}
+              <div 
+                onClick={(e) => removeCategory(e, cat)}
+                className="hover:text-red-500 cursor-pointer"
+              >
+                <X className="w-3 h-3" />
+              </div>
+            </span>
+          ))
+        )}
+        <div className="ml-auto">
+             <Plus className="w-4 h-4 text-gray-400 group-hover:text-black transition-colors" />
+        </div>
+      </div>
+
+      {/* Popup Modal */}
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animation-fade-in">
+          <div className="bg-white w-full max-w-lg h-[80vh] flex flex-col shadow-2xl animation-scale-in border border-gray-100">
+            
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <div>
+                <h3 className="text-lg font-bold uppercase tracking-widest">Select Categories</h3>
+                <p className="text-xs text-gray-400 mt-1 uppercase tracking-wide">{selectedCategories.length} Selected</p>
+              </div>
+              <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="flex-grow overflow-y-auto p-6 grid grid-cols-1 sm:grid-cols-2 gap-3 content-start custom-scrollbar bg-gray-50/30">
+              {CATEGORIES.map(cat => {
+                const active = isSelected(cat);
+                return (
+                  <div 
+                    key={cat}
+                    onClick={() => toggleCategory(cat)}
+                    className={`
+                      cursor-pointer p-4 border transition-all duration-200 flex items-center justify-between group
+                      ${active 
+                        ? 'bg-black text-white border-black shadow-md transform scale-[1.02]' 
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-black hover:text-black'}
+                    `}
+                  >
+                    <span className="text-xs font-bold uppercase tracking-wide">{cat}</span>
+                    {active && <CheckCircle className="w-4 h-4" />}
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="p-6 border-t border-gray-100 bg-white">
+               <button onClick={() => setIsOpen(false)} className="w-full bg-black text-white py-4 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">
+                 Done
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+// 4. Stat Card
 const StatCard = ({ label, value, icon: Icon, trend }) => (
   <div className="bg-white p-6 border border-gray-200 hover:border-black transition-all duration-300 group relative overflow-hidden">
     <div className="relative z-10 flex justify-between items-start mb-4">
@@ -124,16 +219,25 @@ const Sidebar = ({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen }) => 
 
 // --- PRODUCT DRAWER ---
 const ProductDrawer = ({ isOpen, onClose, product, onSave }) => {
+  // Define default structure
   const emptyProduct = {
-    title: '', price: '', category: '', rating: 0, reviews: 0, stock: 0,
-    description: '', details: [], images: [], options: []
+    title: '', 
+    price: '', 
+    category: [], 
+    stock: 0,
+    description: '', 
+    details: [], 
+    images: [], 
+    options: []
   };
 
+  // FIX: Lazy Initialization to prevent double render & ensure 'category' is array
   const [formData, setFormData] = useState(() => {
     if (product) {
       return {
         ...emptyProduct,
         ...product,
+        category: Array.isArray(product.category) ? product.category : [product.category],
         details: product.details || [],
         images: product.images || [],
         options: product.options || []
@@ -143,7 +247,10 @@ const ProductDrawer = ({ isOpen, onClose, product, onSave }) => {
     }
   });
 
-  // Image & Details Handlers
+  // NOTE: Removed useEffect for syncing 'product' to 'formData' to avoid loops.
+  // Instead, we use the `key` prop in the parent component to force a re-mount/re-init.
+
+  // Handlers
   const handleImageChange = (index, value) => { const n = [...formData.images]; n[index] = value; setFormData({ ...formData, images: n }); };
   const addImageField = () => setFormData(prev => ({ ...prev, images: [...prev.images, ""] }));
   const removeImageField = (i) => setFormData(prev => ({ ...prev, images: prev.images.filter((_, idx) => idx !== i) }));
@@ -153,7 +260,11 @@ const ProductDrawer = ({ isOpen, onClose, product, onSave }) => {
   const removeDetailField = (i) => setFormData(prev => ({ ...prev, details: prev.details.filter((_, idx) => idx !== i) }));
 
   // Options Logic
-  const addOption = () => setFormData(prev => ({ ...prev, options: [...prev.options, { name: '', type: 'text', values: [] }] }));
+  const addOption = () => {
+    if (formData.options.length < 3) {
+      setFormData(prev => ({ ...prev, options: [...prev.options, { name: '', type: 'text', values: [] }] }));
+    }
+  };
   const removeOption = (i) => { const n = [...formData.options]; n.splice(i, 1); setFormData({ ...formData, options: n }); };
   const updateOptionMeta = (i, f, v) => { const n = [...formData.options]; n[i][f] = v; if(f==='type') n[i].values=[]; setFormData({ ...formData, options: n }); };
   const addOptionValue = (i) => { const n = [...formData.options]; n[i].values.push(n[i].type === 'color' ? { label: '', value: '' } : ''); setFormData({ ...formData, options: n }); };
@@ -192,19 +303,13 @@ const ProductDrawer = ({ isOpen, onClose, product, onSave }) => {
                  <label className="text-[10px] font-bold uppercase text-gray-500">Price ($)</label>
                  <input type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full border border-gray-200 p-3 text-sm focus:border-black focus:outline-none transition-colors" />
                </div>
+               
+               {/* --- MULTI-SELECT CATEGORY --- */}
                <div className="space-y-1">
                  <label className="text-[10px] font-bold uppercase text-gray-500">Category</label>
-                 <CustomSelect 
-                    value={formData.category} 
-                    onChange={e => setFormData({...formData, category: e.target.value})} 
-                    options={[
-                        { label: 'Apparel', value: 'Apparel' },
-                        { label: 'Footwear', value: 'Footwear' },
-                        { label: 'Living', value: 'Living' },
-                        { label: 'Accessories', value: 'Accessories' },
-                        { label: 'Tech', value: 'Tech' },
-                        { label: 'Kitchen', value: 'Kitchen' }
-                    ]}
+                 <CategorySelector 
+                    selectedCategories={formData.category} 
+                    onChange={(newCats) => setFormData({...formData, category: newCats})}
                  />
                </div>
             </div>
@@ -223,7 +328,7 @@ const ProductDrawer = ({ isOpen, onClose, product, onSave }) => {
             
             {formData.options.map((opt, optIdx) => (
               <div key={optIdx} className="bg-gray-50 border border-gray-200 p-5 relative group">
-                {/* Close Button at Top Right (Fixed) */}
+                {/* Close Button at Top Right */}
                 <button 
                   onClick={() => removeOption(optIdx)} 
                   className="absolute top-2 right-2 p-2 text-gray-400 hover:text-red-500 transition-colors z-10"
@@ -231,7 +336,6 @@ const ProductDrawer = ({ isOpen, onClose, product, onSave }) => {
                   <Trash2 className="w-4 h-4" />
                 </button>
                 
-                {/* Option Header */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pr-8">
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold uppercase text-gray-400">Option Name</label>
@@ -252,7 +356,6 @@ const ProductDrawer = ({ isOpen, onClose, product, onSave }) => {
                   </div>
                 </div>
 
-                {/* Option Values List */}
                 <div className="space-y-3">
                   <label className="text-[10px] font-bold uppercase text-gray-400">Values</label>
                   <div className="flex flex-wrap gap-3">
@@ -342,11 +445,14 @@ const ProductDrawer = ({ isOpen, onClose, product, onSave }) => {
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   
-  // Lazy state initialization to prevent double-render/flash
+  // FIX: Lazy Initialization + Array Normalization
+  // This runs ONLY ONCE on mount, preventing the "flash" of undefined stock
   const [products, setProducts] = useState(() => {
     return initialProductsData.map(p => ({
        ...p, 
-       stock: p.stock !== undefined ? p.stock : 0 
+       stock: p.stock !== undefined ? p.stock : 0,
+       // Normalize category to array so multi-select works
+       category: Array.isArray(p.category) ? p.category : [p.category]
     }));
   });
 
@@ -423,7 +529,7 @@ const Dashboard = () => {
                     <tr className="border-b border-black bg-gray-50">
                       <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Image</th>
                       <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Name</th>
-                      <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Category</th>
+                      <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Categories</th>
                       <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Price</th>
                       <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Stock</th>
                       <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Actions</th>
@@ -438,7 +544,10 @@ const Dashboard = () => {
                           </div>
                         </td>
                         <td className="p-5 text-xs font-bold uppercase tracking-wide">{product.title}</td>
-                        <td className="p-5 text-xs text-gray-500 uppercase tracking-wider">{product.category}</td>
+                        {/* Display Categories as a joined string */}
+                        <td className="p-5 text-xs text-gray-500 uppercase tracking-wider max-w-[200px] truncate">
+                           {Array.isArray(product.category) ? product.category.join(', ') : product.category}
+                        </td>
                         <td className="p-5 text-xs font-medium">${Number(product.price).toFixed(2)}</td>
                         <td className="p-5"><span className={`text-[10px] font-bold px-2 py-1 uppercase tracking-wider ${product.stock < 5 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`}>{product.stock} Units</span></td>
                         <td className="p-5 text-right">
@@ -461,7 +570,9 @@ const Dashboard = () => {
                           {product.images && product.images[0] && <img src={product.images[0]} alt="" className="w-full h-full object-cover" />}
                        </div>
                        <div className="flex-grow">
-                          <p className="text-[10px] font-bold uppercase text-gray-400 mb-1">{product.category}</p>
+                          <p className="text-[10px] font-bold uppercase text-gray-400 mb-1">
+                             {Array.isArray(product.category) ? product.category.join(', ') : product.category}
+                          </p>
                           <h3 className="text-xs font-bold uppercase mb-2 line-clamp-1">{product.title}</h3>
                           <div className="flex justify-between items-center">
                              <span className="text-sm font-medium">${Number(product.price).toFixed(2)}</span>
@@ -478,6 +589,7 @@ const Dashboard = () => {
           </div>
         )}
         
+        {/* KEY PROP FORCES RESET: This ensures ProductDrawer re-mounts when switching products */}
         <ProductDrawer key={editingProduct?.id || 'new'} isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} product={editingProduct} onSave={handleSave} />
       </main>
     </div>

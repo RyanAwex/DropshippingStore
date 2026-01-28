@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { products } from "../utils/products";
+import {useCartStore} from "../stores/cartStore";
 
 const Product = () => {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ const Product = () => {
   const [selections, setSelections] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [openSection, setOpenSection] = useState("description");
+  const [showPopup, setShowPopup] = useState(false);
+  const { addToCart, clearCart } = useCartStore();
 
   const product = products.find(p => p.id == id);
 
@@ -43,6 +46,39 @@ const Product = () => {
   const toggleSection = (section) => {
     setOpenSection(openSection === section ? null : section);
   };
+
+  const handleAddToCart = () => {
+    try {
+      addToCart(product, selections, quantity);
+      setShowPopup(true);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  const handleBuyNow = () => {
+    try {
+      clearCart();
+      addToCart(product, selections, quantity);
+      navigate('/user/checkout');
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  // add to cart popup
+  const AddedPopup = ({ onClose }) => {
+    React.useEffect(() => {
+      const timer = setTimeout(onClose, 2000);
+      return () => clearTimeout(timer);
+    }, [onClose]);
+
+    return (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-600 px-6 py-4 rounded shadow-lg flex items-center text-white z-50">
+          <h2 className="text-lg font-bold">Added to Cart!</h2>
+        </div>
+    );
+  }
 
   return (
     // SAFEGUARD 1: overflow-x-hidden prevents horizontal scroll caused by children
@@ -128,7 +164,7 @@ const Product = () => {
                   ${product.price.toFixed(2)}
                 </span>
 
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   <div className="flex text-black">
                     {[...Array(5)].map((_, i) => (
                       <Star
@@ -140,7 +176,7 @@ const Product = () => {
                   <span className="text-xs text-gray-500 underline cursor-pointer hover:text-black">
                     {product.reviews} Reviews
                   </span>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -218,10 +254,15 @@ const Product = () => {
 
             {/* Actions */}
             <div className="flex gap-4 mb-10 w-full">
-              <button className="w-full group relative h-14 border border-black overflow-hidden bg-black text-white">
+              <button onClick={() => {handleAddToCart(product.id, quantity)}} className="w-full cursor-pointer group relative h-14 border border-black overflow-hidden bg-black text-white">
                 <span className="absolute inset-0 w-full h-full bg-white translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0"></span>
                 <span className="relative z-10 w-full flex justify-center items-center text-xs font-bold uppercase tracking-widest group-hover:text-black transition-colors duration-300">
-                  Add to Cart — ${(product.price * quantity).toFixed(2)}
+                  Add to Cart
+                </span>
+              </button>
+              <button onClick={() => {handleBuyNow(product.id, quantity)}} className="w-full cursor-pointer group relative h-14 border border-black overflow-hidden bg-white text-black hover:border-2">
+                <span className="relative z-10 w-full flex justify-center items-center text-xs font-bold uppercase tracking-widest">
+                  Buy It Now
                 </span>
               </button>
             </div>
@@ -231,7 +272,7 @@ const Product = () => {
               {[
                 { id: "description", label: "Description", content: <p>{product.description}</p> },
                 { id: "material", label: "Material & Care", content: <ul className="list-disc list-inside space-y-1">{product.details.map((d, i) => <li key={i}>{d}</li>)}</ul> },
-                { id: "shipping", label: "Shipping & Returns", content: <p>Free shipping on orders over $200. Returns accepted within 30 days.</p> }
+                { id: "shipping", label: "Shipping & Returns", content: <p>Free shipping on orders over $100. Returns accepted within 30 days.</p> }
               ].map((section) => (
                 <div key={section.id} className="border-b border-gray-200">
                   <button
@@ -253,6 +294,8 @@ const Product = () => {
           </div>
         </div>
       </div>
+
+      {showPopup && <AddedPopup onClose={() => setShowPopup(false)} />}
     </div>
   );
 };

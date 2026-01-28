@@ -1,29 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Trash2, Minus, Plus, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCartStore } from '../stores/cartStore';
 
 const Cart = () => {
-  const [cartItems, setCartItems] = useState([
-    { id: 1, name: 'Minimalist Vase', price: 45, quantity: 1, image: 'https://placehold.co/150x150/e0e0e0/333' },
-    { id: 2, name: 'Linen Throw', price: 85, quantity: 2, image: 'https://placehold.co/150x150/e0e0e0/333' },
-  ]);
+  const { cartItems, updateQuantity, removeFromCart, getCartTotal } = useCartStore();
 
-  const updateQuantity = (id, change) => {
-    setCartItems(items => items.map(item => {
-      if (item.id === id) {
-        const newQuantity = Math.max(1, item.quantity + change);
-        return { ...item, quantity: newQuantity };
-      }
-      return item;
-    }));
-  };
+  // const updateQuantity = (id, change) => {
+  //   setCartItems(items => items.map(item => {
+  //     if (item.id === id) {
+  //       const newQuantity = Math.max(1, item.quantity + change);
+  //       return { ...item, quantity: newQuantity };
+  //     }
+  //     return item;
+  //   }));
+  // };
 
-  const removeItem = (id) => {
-    setCartItems(items => items.filter(item => item.id !== id));
-  };
+  // const removeItem = (id) => {
+  //   setCartItems(items => items.filter(item => item.id !== id));
+  // };
 
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shipping = 15;
+  const subtotal = getCartTotal();
+  const shipping = subtotal > 0 ? subtotal > 100 ? 0 : 15 : 0;
   const total = subtotal + shipping;
 
   return (
@@ -51,37 +49,40 @@ const Cart = () => {
 
               {/* Items */}
               {cartItems.map((item) => (
-                <div key={item.id} className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center border-b border-gray-100 pb-6 md:pb-8 gap-4 md:gap-0">
+                <div key={item.cartId} className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center border-b border-gray-100 pb-6 md:pb-8 gap-4 md:gap-0">
                   
                   {/* Product Info */}
                   <div className="col-span-6 flex gap-4 md:gap-6 w-full">
                     <div className="w-24 h-24 md:w-24 md:h-24 bg-gray-100 flex-shrink-0">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
                     </div>
                     
                     <div className="flex flex-col justify-between py-1 w-full">
-                      <div className="flex justify-between md:block">
-                        <h3 className="text-sm font-bold uppercase tracking-wide">{item.name}</h3>
+                      <div className="flex justify-between md:block gap-3">
+                        <h3 className="text-sm font-bold uppercase tracking-wide">{item.title}</h3>
                         {/* Mobile Price Display */}
                         <span className="md:hidden text-sm font-medium">${(item.price * item.quantity).toFixed(2)}</span>
                       </div>
                       
+                      <p className=" text-xs text-gray-500 mt-1">
+                        {Object.entries(item.selectedOptions).map(([value]) => `${value}`).join(' | ')}
+                      </p>
                       <p className="hidden md:block text-xs text-gray-500 mt-1">${item.price.toFixed(2)}</p>
                       
                       {/* Mobile Controls Container */}
                       <div className="md:hidden flex justify-between items-center mt-4">
                          <div className="flex items-center border border-gray-200">
-                            <button onClick={() => updateQuantity(item.id, -1)} className="p-2 hover:bg-gray-50 text-gray-500"><Minus className="w-3 h-3" /></button>
+                            <button onClick={() => updateQuantity(item.cartId, item.quantity - 1)} className="p-2 hover:bg-gray-50 text-gray-500"><Minus className="w-3 h-3" /></button>
                             <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, 1)} className="p-2 hover:bg-gray-50 text-gray-500"><Plus className="w-3 h-3" /></button>
+                            <button onClick={() => updateQuantity(item.cartId, item.quantity + 1)} className="p-2 hover:bg-gray-50 text-gray-500"><Plus className="w-3 h-3" /></button>
                           </div>
-                          <button onClick={() => removeItem(item.id)} className="text-xs text-red-400 hover:text-red-600 uppercase tracking-wider flex items-center gap-1">
+                          <button onClick={() => removeFromCart(item.cartId)} className="text-xs text-red-400 hover:text-red-600 uppercase tracking-wider flex items-center gap-1">
                              <Trash2 className="w-4 h-4" />
                           </button>
                       </div>
 
                        {/* Desktop Remove Button */}
-                      <button onClick={() => removeItem(item.id)} className="hidden md:flex text-xs text-red-400 hover:text-red-600 uppercase tracking-wider items-center gap-1 w-fit mt-2">
+                      <button onClick={() => removeFromCart(item.cartId)} className="hidden md:flex text-xs text-red-400 hover:text-red-600 uppercase tracking-wider items-center gap-1 w-fit mt-2">
                         <Trash2 className="w-3 h-3" /> Remove
                       </button>
                     </div>
@@ -90,9 +91,9 @@ const Cart = () => {
                   {/* Desktop Quantity Control */}
                   <div className="hidden md:flex col-span-3 justify-center">
                     <div className="flex items-center border border-gray-200">
-                      <button onClick={() => updateQuantity(item.id, -1)} className="p-2 hover:bg-gray-50 text-gray-500"><Minus className="w-3 h-3" /></button>
+                      <button onClick={() => updateQuantity(item.cartId, item.quantity - 1)} className="p-2 hover:bg-gray-50 text-gray-500"><Minus className="w-3 h-3" /></button>
                       <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, 1)} className="p-2 hover:bg-gray-50 text-gray-500"><Plus className="w-3 h-3" /></button>
+                      <button onClick={() => updateQuantity(item.cartId, item.quantity + 1)} className="p-2 hover:bg-gray-50 text-gray-500"><Plus className="w-3 h-3" /></button>
                     </div>
                   </div>
 
@@ -122,8 +123,11 @@ const Cart = () => {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Shipping</span>
-                <span>${shipping.toFixed(2)}</span>
+                <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
               </div>
+              {subtotal < 100 && <div className='flex items-center'>
+                <p className='text-green-600 italic'>* Spend ${Math.max(0, 100 - subtotal).toFixed(2)} more to get Free Shipping</p>
+              </div>}
             </div>
 
             <div className="flex justify-between text-lg font-medium mb-8">
@@ -132,11 +136,10 @@ const Cart = () => {
             </div>
 
             {/* Checkout Button */}
-            <Link to="/checkout" className="w-full group relative px-8 py-4 border border-black overflow-hidden bg-white text-black inline-block">
+            <Link to="/user/checkout" className="w-full group relative px-8 py-4 border border-black overflow-hidden bg-white text-black inline-block">
               <span className="absolute inset-0 w-full h-full bg-black translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0"></span>
-              <span className="relative z-10 w-full flex justify-between items-center text-xs font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300">
+              <span className="relative z-10 w-full flex justify-center items-center text-xs font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300">
                 <span>Checkout</span>
-                <span>${total.toFixed(2)}</span>
               </span>
             </Link>
 

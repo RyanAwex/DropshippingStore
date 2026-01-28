@@ -11,8 +11,9 @@ const Home = () => {
   // --- States ---
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false); // New State for Mobile Menu
-  const { user, logout, isAuthenticated, checkAuth } = useAuthStore();
+  const { logout, isAuthenticated, checkAuth, isLoading } = useAuthStore();
   const profileRef = useRef(null);
+  const isAdmin = useAuthStore((s) => s.isAdmin);
 
   // Check auth on mount
   useEffect(() => {
@@ -95,27 +96,36 @@ const Home = () => {
             <div className="grid grid-cols-2 gap-4">
               {isAuthenticated ? (
                 <>
-                  {user?.isAdmin ? (
+                  {isAdmin && (
                     <Link
                       to="/admin/dashboard"
                       className="w-full py-3 border border-black text-black text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-50 transition-colors"
                     >
                       Dashboard
                     </Link>
-                  ) : (
-                    <Link
-                      to="/user/profile"
-                      className="w-full py-3 border border-black text-black text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-50 transition-colors"
-                    >
-                      Profile
-                    </Link>
                   )}
-                  <button
-                    onClick={() => logout()}
-                    className="w-full py-3 bg-black text-white text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-800 transition-colors"
+                  <Link
+                    to="/user/profile"
+                    className="w-full py-3 border border-black text-black text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-50 transition-colors"
                   >
-                    Logout
-                  </button>
+                    Profile
+                  </Link>
+
+                  {!isLoading ? (
+                    <button
+                      onClick={() => logout()}
+                      className="w-full py-3 bg-black text-white text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-800 transition-colors"
+                    >
+                      Logout
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="w-full py-3 bg-gray-300 text-white text-xs font-bold uppercase tracking-widest text-center cursor-not-allowed"
+                    >
+                      Logging Out...
+                    </button>
+                  )}
                 </>
               ) : (
                 <>
@@ -168,7 +178,7 @@ const Home = () => {
         <div className="flex items-center space-x-6">
           <Search className="w-5 h-5 cursor-pointer hover:text-black transition-colors" />
 
-          <Link to="/cart">
+          <Link to="/user/cart">
             <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-black transition-colors" />
           </Link>
 
@@ -191,27 +201,35 @@ const Home = () => {
                   </p>
                   {isAuthenticated ? (
                     <>
-                      {user?.isAdmin ? (
+                      {isAdmin && (
                         <Link
                           to="/admin/dashboard"
                           className="w-full py-3 border border-black text-black text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-50 transition-colors"
                         >
                           Dashboard
                         </Link>
-                      ) : (
+                      )} 
                         <Link
                           to="/user/profile"
                           className="w-full py-3 border border-black text-black text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-50 transition-colors"
                         >
                           Profile
                         </Link>
+                      {!isLoading ? (
+                        <button
+                          onClick={() => logout()}
+                          className="w-full py-3 bg-black text-white text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-800 transition-colors"
+                        >
+                          Logout
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          className="w-full py-3 bg-gray-300 text-white text-xs font-bold uppercase tracking-widest text-center cursor-not-allowed"
+                        >
+                          Logging Out...
+                        </button>
                       )}
-                      <button
-                        onClick={() => logout()}
-                        className="w-full py-3 bg-black text-white text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-800 transition-colors"
-                      >
-                        Logout
-                      </button>
                     </>
                   ) : (
                     <>

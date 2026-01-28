@@ -9,7 +9,7 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
           <div>
             <h3 className="text-2xl font-bold tracking-widest uppercase mb-4">
-              Vraxia Goods
+              Vraxia Store
             </h3>
             <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
               Curated essentials for the modern home. We prioritize quality,
@@ -86,7 +86,7 @@ function Footer() {
 
         {/* Bottom Section */}
         <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-400 uppercase tracking-widest">
-          <p>&copy; 2026 Vraxia Goods. All rights reserved.</p>
+          <p>&copy; 2026 Vraxia Store. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-gray-600">
               Privacy

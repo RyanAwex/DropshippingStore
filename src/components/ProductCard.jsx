@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 function ProductCard({ product }) {
   return (
-    <Link to={`/product/${product.id}`} className="group max-w-xs w-full mx-auto">
+    <Link to={`/shop/product/${product.id}`} className="group max-w-xs w-full mx-auto">
       {/* Image Container - Strictly Square & Fixed Max Width */}
       <div className="w-full aspect-square bg-gray-100 mb-4 overflow-hidden relative">
         <img 
