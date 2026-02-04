@@ -7,9 +7,11 @@ import {
   Calendar,
   MoreHorizontal,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { coupons } from "../utils/coupons"; // Ensure this path matches your project structure
-import {useCartStore} from "../stores/cartStore";
+import { useCartStore } from "../stores/cartStore";
+import { useAuthStore } from "../stores/authStore";
+import supabase from "../utils/supabase";
 
 // --- Custom Brand Icons (Inline SVGs) ---
 const GooglePayIcon = ({ className }) => (
@@ -145,6 +147,23 @@ const PaymentButton = ({ id, label, icon: Icon, isSelected, onSelect }) => (
 
 // --- Main Checkout Component ---
 const Checkout = () => {
+  const navigate = useNavigate();
+
+  // --- Stores ---
+  const { isAuthenticated, user } = useAuthStore();
+  const { cartItems, getCartTotal } = useCartStore();
+
+  // user info
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
+  const fullName = `${firstName} ${lastName}`;
+
+  // --- Payment Method State ---
   const [cardNumber, setCardNumber] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState("credit-card");
@@ -154,18 +173,15 @@ const Checkout = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [couponSuccess, setCouponSuccess] = useState("");
-  const {cartItems, getCartTotal} = useCartStore();
 
+  // --- Calculated Totals ---
   const subtotal = getCartTotal();
-  
   const discountAmount = appliedCoupon
-  ? (subtotal * appliedCoupon.discountValue) / 100
-  : 0;
-
+    ? (subtotal * appliedCoupon.discountValue) / 100
+    : 0;
   const totalBeforeShipping = subtotal - discountAmount;
-
-  const shipping = totalBeforeShipping > 0 ? totalBeforeShipping > 100 ? 0 : 15 : 0;
-
+  const shipping =
+    totalBeforeShipping > 0 ? (totalBeforeShipping > 100 ? 0 : 15) : 0;
   const total = totalBeforeShipping + shipping;
 
   const handleApplyCoupon = () => {
@@ -209,6 +225,48 @@ const Checkout = () => {
     );
   };
 
+  const handleSubmit = async () => {
+    try {
+      if (!isAuthenticated) {
+        navigate("/auth");
+        return;
+      }
+
+      // Map payment methods to database values
+      // Allowed values: 'stripe', 'paypal', 'google_pay', 'apple_pay'
+      const paymentProviderMap = {
+        "credit-card": "stripe",
+        "paypal": "paypal",
+        "google-pay": "google_pay",
+        "apple-pay": "apple_pay"
+      };
+
+      const { error } = await supabase.from("orders").insert({
+        user_id: user.id,
+        items: cartItems,
+        total_price: total,
+        shipping_info: {
+          fullName,
+          email,
+          phone,
+          country,
+          city,
+          address,
+        },
+        payment_id: Math.random().toString(36).substring(2, 30), // Mock payment ID
+        payment_provider: paymentProviderMap[selectedPaymentMethod] || selectedPaymentMethod,
+      });
+
+      if (error) {
+        throw error;
+      }
+      // Further processing like redirecting to a confirmation page can be done here
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+
   return (
     <div className="bg-white min-h-screen pt-10 pb-10 lg:pb-50 px-4 md:px-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -235,6 +293,30 @@ const Checkout = () => {
               Contact Information
             </h2>
             <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col">
+                  <label className="text-xs uppercase font-bold text-gray-400 mb-2">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
+                    placeholder="John"
+                    onChange={(e) => {setFirstName(e.target.value)}}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-xs uppercase font-bold text-gray-400 mb-2">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
+                    placeholder="Alfred"
+                    onChange={(e) => {setLastName(e.target.value)}}
+                  />
+                </div>
+              </div>
               <div className="flex flex-col">
                 <label className="text-xs uppercase font-bold text-gray-400 mb-2">
                   Email Address
@@ -243,6 +325,7 @@ const Checkout = () => {
                   type="email"
                   placeholder="you@example.com"
                   className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors"
+                  onChange={(e) => {setEmail(e.target.value)}}
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -255,6 +338,19 @@ const Checkout = () => {
                   Email me with news and offers
                 </label>
               </div>
+
+              <div className="flex flex-col md:col-span-2">
+                <label className="text-xs uppercase font-bold text-gray-400 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
+                  placeholder="+1 (123) 456 789"
+                  onChange={(e) => {setPhone(e.target.value)}}
+                />
+              </div>
+              
             </div>
           </section>
 
@@ -263,34 +359,40 @@ const Checkout = () => {
               Shipping Address
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col md:col-span-2">
+              <div className="flex flex-col">
                 <label className="text-xs uppercase font-bold text-gray-400 mb-2">
                   Country/Region
                 </label>
                 <div className="relative w-full">
-                  <select className="w-full appearance-none border border-gray-200 px-4 py-3 pr-10 text-sm bg-white focus:outline-none focus:border-black transition-colors cursor-pointer rounded-none">
-                    <option>United States</option>
-                    <option>Morocco</option>
+                  <select className="w-full appearance-none border border-gray-200 px-4 py-3 pr-10 text-sm bg-white focus:outline-none focus:border-black transition-colors cursor-pointer rounded-none" onChange={(e) => {setCountry(e.target.value)}}>
+                    <option value="" disabled defaultValue={""}>Select Country</option>
+                    <option value="US">United States</option>
+                    <option value="UK">United Kingdom</option>
+                    <option value="MA">Morocco</option>
                   </select>
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                 </div>
               </div>
               <div className="flex flex-col">
                 <label className="text-xs uppercase font-bold text-gray-400 mb-2">
-                  First Name
+                  City
                 </label>
                 <input
                   type="text"
                   className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
+                  placeholder="London"
+                  onChange={(e) => {setCity(e.target.value)}}
                 />
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col md:col-span-2">
                 <label className="text-xs uppercase font-bold text-gray-400 mb-2">
-                  Last Name
+                  Address
                 </label>
                 <input
                   type="text"
                   className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
+                  placeholder="1234 Main St"
+                  onChange={(e) => {setAddress(e.target.value)}}
                 />
               </div>
             </div>
@@ -340,13 +442,19 @@ const Checkout = () => {
                   </span>
                   <div className="flex space-x-2">
                     <div className="w-8 h-5 bg-white border border-gray-200 rounded flex items-center justify-center">
-                      <img src="/payments/Mastercard.svg" alt="Mastercard Card" />
+                      <img
+                        src="/payments/Mastercard.svg"
+                        alt="Mastercard Card"
+                      />
                     </div>
                     <div className="w-8 h-5 bg-white border border-gray-200 rounded flex items-center justify-center">
                       <img src="/payments/Visa.svg" alt="Visa Card" />
                     </div>
                     <div className="w-8 h-5 bg-white border border-gray-200 rounded flex items-center justify-center">
-                      <img src="/payments/American_Express.svg" alt="American Express Card" />
+                      <img
+                        src="/payments/American_Express.svg"
+                        alt="American Express Card"
+                      />
                     </div>
                     <div className="w-8 h-5 bg-white border border-gray-200 rounded flex items-center justify-center">
                       <MoreHorizontal size={14} />
@@ -424,10 +532,14 @@ const Checkout = () => {
                       {item.title}
                     </h4>
                     <p className="text-xs text-gray-500 mt-1">
-                      {Object.entries(item.selectedOptions).map(([value]) => `${value}`).join(' | ')}
+                      {Object.entries(item.selectedOptions)
+                        .map(([value]) => `${value}`)
+                        .join(" | ")}
                     </p>
                   </div>
-                  <div className="text-sm font-medium">${item.price.toFixed(2)}</div>
+                  <div className="text-sm font-medium">
+                    ${item.price.toFixed(2)}
+                  </div>
                 </div>
               ))}
             </div>
@@ -471,7 +583,9 @@ const Checkout = () => {
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
+                <span>
+                  {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+                </span>
               </div>
 
               {/* Discount Row (Only visible if coupon applied) */}
@@ -488,7 +602,10 @@ const Checkout = () => {
               <span>${total.toFixed(2)}</span>
             </div>
 
-            <button className="w-full group relative px-8 py-4 border border-black overflow-hidden bg-black text-white">
+            <button
+              onClick={handleSubmit}
+              className="w-full group relative px-8 py-4 border border-black overflow-hidden bg-black text-white"
+            >
               <span className="absolute inset-0 w-full h-full bg-white translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0"></span>
               <span className="relative z-10 w-full flex justify-center items-center text-xs font-bold uppercase tracking-widest group-hover:text-black transition-colors duration-300">
                 Place Order
