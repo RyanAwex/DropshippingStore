@@ -6,6 +6,8 @@ import {
   ChevronDown,
   Calendar,
   MoreHorizontal,
+  CheckCircle,
+  Package,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { coupons } from "../utils/coupons"; // Ensure this path matches your project structure
@@ -145,6 +147,105 @@ const PaymentButton = ({ id, label, icon: Icon, isSelected, onSelect }) => (
   </button>
 );
 
+const OrderSuccess = ({ order, countdown }) => {
+  return (
+    <div className="fixed inset-0 z-[200] bg-white flex items-center justify-center animation-fade-in">
+      <div className="max-w-md w-full mx-auto px-6 text-center">
+        {/* Animated checkmark */}
+        <div className="mb-8 flex justify-center">
+          <div className="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center animate-bounce">
+            <CheckCircle className="w-10 h-10" />
+          </div>
+        </div>
+
+        <h1 className="text-3xl font-light uppercase tracking-widest mb-3">
+          Order Placed
+        </h1>
+        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-8">
+          Thank you for your purchase
+        </p>
+
+        {/* Order info card */}
+        <div className="bg-gray-50 border border-gray-200 p-6 mb-8 text-left space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="p-2 bg-black text-white">
+              <Package className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                Order ID
+              </p>
+              <p className="text-xs font-mono text-gray-600">#{order.id}</p>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
+              Customer
+            </p>
+            <p className="text-sm font-medium">{order.fullName}</p>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
+              Items
+            </p>
+            <div className="space-y-2">
+              {order.items.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white border border-gray-200 overflow-hidden flex-shrink-0">
+                    {item.image && (
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <span className="text-xs font-medium uppercase tracking-wide flex-grow">
+                    {item.title}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    ×{item.quantity}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center border-t border-gray-100 pt-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+              Total
+            </p>
+            <p className="text-lg font-medium">${order.total.toFixed(2)}</p>
+          </div>
+        </div>
+
+        <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+          Your order has been successfully submitted. Our team will start
+          preparing it right away.
+        </p>
+
+        {/* Countdown */}
+        <div className="space-y-3">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            Redirecting to your profile in
+          </p>
+          <div className="inline-flex items-center justify-center w-10 h-10 border border-black text-sm font-bold">
+            {countdown}
+          </div>
+          <div className="w-full bg-gray-200 h-[2px] mt-4 overflow-hidden">
+            <div
+              className="h-full bg-black transition-all duration-1000 ease-linear"
+              style={{ width: `${((7 - countdown) / 7) * 100}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- Main Checkout Component ---
 const Checkout = () => {
   const navigate = useNavigate();
@@ -162,6 +263,10 @@ const Checkout = () => {
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
   const fullName = `${firstName} ${lastName}`;
+
+  // --- Order Success State ---
+  const [orderSuccess, setOrderSuccess] = useState(null);
+  const [countdown, setCountdown] = useState(7);
 
   // --- Payment Method State ---
   const [cardNumber, setCardNumber] = useState("");
@@ -236,9 +341,9 @@ const Checkout = () => {
       // Allowed values: 'stripe', 'paypal', 'google_pay', 'apple_pay'
       const paymentProviderMap = {
         "credit-card": "stripe",
-        "paypal": "paypal",
+        paypal: "paypal",
         "google-pay": "google_pay",
-        "apple-pay": "apple_pay"
+        "apple-pay": "apple_pay",
       };
 
       const { error } = await supabase.from("orders").insert({
@@ -254,18 +359,41 @@ const Checkout = () => {
           address,
         },
         payment_id: Math.random().toString(36).substring(2, 30), // Mock payment ID
-        payment_provider: paymentProviderMap[selectedPaymentMethod] || selectedPaymentMethod,
+        payment_provider:
+          paymentProviderMap[selectedPaymentMethod] || selectedPaymentMethod,
       });
 
       if (error) {
         throw error;
       }
-      // Further processing like redirecting to a confirmation page can be done here
+
+      // Show success screen with order details
+      setOrderSuccess({
+        id: Math.random().toString(36).substring(2, 10).toUpperCase(),
+        fullName,
+        items: cartItems,
+        total,
+      });
     } catch (error) {
       console.log(error.message);
     }
   };
 
+  // Countdown + redirect when order is successful
+  useEffect(() => {
+    if (!orderSuccess) return;
+    if (countdown <= 0) {
+      navigate("/user/profile");
+      return;
+    }
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [orderSuccess, countdown, navigate]);
+
+  // Show full-screen success overlay
+  if (orderSuccess) {
+    return <OrderSuccess order={orderSuccess} countdown={countdown} />;
+  }
 
   return (
     <div className="bg-white min-h-screen pt-10 pb-10 lg:pb-50 px-4 md:px-6 max-w-7xl mx-auto">
@@ -302,7 +430,9 @@ const Checkout = () => {
                     type="text"
                     className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
                     placeholder="John"
-                    onChange={(e) => {setFirstName(e.target.value)}}
+                    onChange={(e) => {
+                      setFirstName(e.target.value);
+                    }}
                   />
                 </div>
                 <div className="flex flex-col">
@@ -313,7 +443,9 @@ const Checkout = () => {
                     type="text"
                     className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
                     placeholder="Alfred"
-                    onChange={(e) => {setLastName(e.target.value)}}
+                    onChange={(e) => {
+                      setLastName(e.target.value);
+                    }}
                   />
                 </div>
               </div>
@@ -325,7 +457,9 @@ const Checkout = () => {
                   type="email"
                   placeholder="you@example.com"
                   className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors"
-                  onChange={(e) => {setEmail(e.target.value)}}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                  }}
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -347,10 +481,11 @@ const Checkout = () => {
                   type="text"
                   className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
                   placeholder="+1 (123) 456 789"
-                  onChange={(e) => {setPhone(e.target.value)}}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                  }}
                 />
               </div>
-              
             </div>
           </section>
 
@@ -364,8 +499,15 @@ const Checkout = () => {
                   Country/Region
                 </label>
                 <div className="relative w-full">
-                  <select className="w-full appearance-none border border-gray-200 px-4 py-3 pr-10 text-sm bg-white focus:outline-none focus:border-black transition-colors cursor-pointer rounded-none" onChange={(e) => {setCountry(e.target.value)}}>
-                    <option value="" disabled defaultValue={""}>Select Country</option>
+                  <select
+                    className="w-full appearance-none border border-gray-200 px-4 py-3 pr-10 text-sm bg-white focus:outline-none focus:border-black transition-colors cursor-pointer rounded-none"
+                    onChange={(e) => {
+                      setCountry(e.target.value);
+                    }}
+                  >
+                    <option value="" disabled defaultValue={""}>
+                      Select Country
+                    </option>
                     <option value="US">United States</option>
                     <option value="UK">United Kingdom</option>
                     <option value="MA">Morocco</option>
@@ -381,7 +523,9 @@ const Checkout = () => {
                   type="text"
                   className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
                   placeholder="London"
-                  onChange={(e) => {setCity(e.target.value)}}
+                  onChange={(e) => {
+                    setCity(e.target.value);
+                  }}
                 />
               </div>
               <div className="flex flex-col md:col-span-2">
@@ -392,7 +536,9 @@ const Checkout = () => {
                   type="text"
                   className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
                   placeholder="1234 Main St"
-                  onChange={(e) => {setAddress(e.target.value)}}
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                  }}
                 />
               </div>
             </div>

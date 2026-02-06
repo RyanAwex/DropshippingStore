@@ -165,6 +165,20 @@ const ProductDrawer = ({ isOpen, onClose, product, onSave }) => {
                 />
               </div>
 
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-gray-500">
+                  Stock
+                </label>
+                <input
+                  type="number"
+                  value={formData.stock}
+                  onChange={(e) =>
+                    setFormData({ ...formData, stock: e.target.value })
+                  }
+                  className="w-full border border-gray-200 p-3 text-sm focus:border-black focus:outline-none transition-colors"
+                />
+              </div>
+
               {/* Multi-Select Category */}
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase text-gray-500">

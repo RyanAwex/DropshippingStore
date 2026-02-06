@@ -97,6 +97,25 @@ const Dashboard = () => {
   // Get order stats for overview
   const orderStats = getOrderStats();
 
+  // Helper to safely format category data that may be double-stringified
+  const formatCategories = (category) => {
+    if (!category) return "";
+    const cats = Array.isArray(category) ? category : [category];
+    return cats
+      .flatMap((c) => {
+        if (typeof c === "string") {
+          try {
+            const parsed = JSON.parse(c);
+            return Array.isArray(parsed) ? parsed : [parsed];
+          } catch {
+            return [c];
+          }
+        }
+        return [c];
+      })
+      .join(", ");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
       <Sidebar
@@ -179,7 +198,10 @@ const Dashboard = () => {
                   className="group relative px-6 py-3 border border-black overflow-hidden bg-white text-black hover:bg-gray-50 transition-all"
                 >
                   <span className="flex items-center text-xs font-bold uppercase tracking-widest">
-                    <RefreshCw className={`w-4 h-4 mr-2 ${productsLoading ? "animate-spin" : ""}`} /> Refresh
+                    <RefreshCw
+                      className={`w-4 h-4 mr-2 ${productsLoading ? "animate-spin" : ""}`}
+                    />{" "}
+                    Refresh
                   </span>
                 </button>
                 <button
@@ -202,7 +224,9 @@ const Dashboard = () => {
               <div className="bg-white border border-gray-200 p-12 flex items-center justify-center">
                 <div className="text-center">
                   <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-xs uppercase tracking-widest text-gray-400">Loading products...</p>
+                  <p className="text-xs uppercase tracking-widest text-gray-400">
+                    Loading products...
+                  </p>
                 </div>
               </div>
             )}
@@ -212,7 +236,9 @@ const Dashboard = () => {
               <div className="bg-white border border-gray-200 p-12 flex items-center justify-center">
                 <div className="text-center">
                   <Package className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                  <p className="text-xs uppercase tracking-widest text-gray-400">No products yet</p>
+                  <p className="text-xs uppercase tracking-widest text-gray-400">
+                    No products yet
+                  </p>
                 </div>
               </div>
             )}
@@ -269,9 +295,7 @@ const Dashboard = () => {
                             {product.title}
                           </td>
                           <td className="p-5 text-xs text-gray-500 uppercase tracking-wider max-w-[200px] truncate">
-                            {Array.isArray(product.category)
-                              ? product.category.join(", ")
-                              : product.category}
+                            {formatCategories(product.category)}
                           </td>
                           <td className="p-5 text-xs font-medium">
                             ${Number(product.price).toFixed(2)}
@@ -326,9 +350,7 @@ const Dashboard = () => {
                       </div>
                       <div className="flex-grow">
                         <p className="text-[10px] font-bold uppercase text-gray-400 mb-1">
-                          {Array.isArray(product.category)
-                            ? product.category.join(", ")
-                            : product.category}
+                          {formatCategories(product.category)}
                         </p>
                         <h3 className="text-xs font-bold uppercase mb-2 line-clamp-1">
                           {product.title}
@@ -390,7 +412,9 @@ const Dashboard = () => {
               <div className="bg-white border border-gray-200 p-12 flex items-center justify-center">
                 <div className="text-center">
                   <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-xs uppercase tracking-widest text-gray-400">Loading orders...</p>
+                  <p className="text-xs uppercase tracking-widest text-gray-400">
+                    Loading orders...
+                  </p>
                 </div>
               </div>
             )}
@@ -400,7 +424,9 @@ const Dashboard = () => {
               <div className="bg-white border border-gray-200 p-12 flex items-center justify-center">
                 <div className="text-center">
                   <ShoppingBag className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                  <p className="text-xs uppercase tracking-widest text-gray-400">No orders yet</p>
+                  <p className="text-xs uppercase tracking-widest text-gray-400">
+                    No orders yet
+                  </p>
                 </div>
               </div>
             )}
@@ -457,8 +483,12 @@ const Dashboard = () => {
                                 )}
                               </div>
                               <div>
-                                <p className="text-[10px] font-mono text-gray-400">#{String(order.id).slice(0, 8)}</p>
-                                <p className="text-xs font-medium">{order.items?.length || 0} items</p>
+                                <p className="text-[10px] font-mono text-gray-400">
+                                  #{String(order.id).slice(0, 8)}
+                                </p>
+                                <p className="text-xs font-medium">
+                                  {order.items?.length || 0} items
+                                </p>
                               </div>
                             </div>
                           </td>
@@ -498,14 +528,22 @@ const Dashboard = () => {
                           </td>
                           <td className="p-5">
                             <span className="text-xs uppercase tracking-wide bg-gray-100 px-2 py-1">
-                              {order.payment_provider?.replace("_", " ") || "N/A"}
+                              {order.payment_provider?.replace("_", " ") ||
+                                "N/A"}
                             </span>
                           </td>
                           <td className="p-5">
                             <div className="text-xs text-gray-500">
-                              <p>{new Date(order.created_at).toLocaleDateString()}</p>
+                              <p>
+                                {new Date(
+                                  order.created_at,
+                                ).toLocaleDateString()}
+                              </p>
                               <p className="text-[10px] text-gray-400">
-                                {new Date(order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                {new Date(order.created_at).toLocaleTimeString(
+                                  [],
+                                  { hour: "2-digit", minute: "2-digit" },
+                                )}
                               </p>
                             </div>
                           </td>
@@ -551,7 +589,9 @@ const Dashboard = () => {
                               <p className="text-xs font-bold uppercase">
                                 {order.shipping_info?.fullName || "N/A"}
                               </p>
-                              <p className="text-[10px] font-mono text-gray-400">#{String(order.id).slice(0, 8)}</p>
+                              <p className="text-[10px] font-mono text-gray-400">
+                                #{String(order.id).slice(0, 8)}
+                              </p>
                             </div>
                             <span className="text-sm font-medium">
                               ${Number(order.total_price).toFixed(2)}
