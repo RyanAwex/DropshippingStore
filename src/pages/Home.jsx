@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ShoppingCart, Search, Menu, User, X, ChevronDown } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
-import { products } from "../utils/products";
+import { useProductStore } from "../stores/productStore";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import BenefitsStrip from "../components/BenefitsStrip";
@@ -12,13 +12,15 @@ const Home = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false); // New State for Mobile Menu
   const { logout, isAuthenticated, checkAuth, isLoading } = useAuthStore();
+  const { products, fetchProducts, isLoading: productsLoading } = useProductStore();
   const profileRef = useRef(null);
   const isAdmin = useAuthStore((s) => s.isAdmin);
 
-  // Check auth on mount
+  // Check auth and fetch products on mount
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+    fetchProducts();
+  }, [checkAuth, fetchProducts]);
 
   // Close profile popup when clicking outside
   useEffect(() => {
@@ -302,12 +304,24 @@ const Home = () => {
       <main className="flex-grow max-w-7xl mx-auto px-6 py-20 w-full">
         <BenefitsStrip />
 
+        {/* Loading State */}
+        {productsLoading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-xs uppercase tracking-widest text-gray-400">Loading products...</p>
+            </div>
+          </div>
+        )}
+
         {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 justify-items-center">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {!productsLoading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 justify-items-center">
+            {products.slice(0, 8).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
 
         {/* Load More */}
         <div className="flex justify-center mt-20">

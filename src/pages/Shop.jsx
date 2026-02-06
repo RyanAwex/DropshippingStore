@@ -2,9 +2,11 @@ import React, { useState, useEffect, useMemo } from "react";
 import { ChevronDown, SlidersHorizontal, X, Check, Loader, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
-import { products } from "../utils/products";
+import { useProductStore } from "../stores/productStore";
 
 const Shop = () => {
+  const { products, fetchProducts, isLoading: productsLoading } = useProductStore();
+  
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(6);
@@ -12,25 +14,35 @@ const Shop = () => {
   const [showAllCategories, setShowAllCategories] = useState(false);
   
   // --- STATE FOR FILTERS ---
-  const [filteredProducts, setFilteredProducts] = useState(products);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
   const [sortOption, setSortOption] = useState("newest"); // newest, price-asc, price-desc
 
+  // Fetch products on mount
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
   // --- 1. DYNAMIC CATEGORY EXTRACTION ---
   // We use useMemo so we don't recalculate this on every render
   const uniqueCategories = useMemo(() => {
-    return [...new Set(products.map((p) => p.category))];
-  }, []);
+    // Handle both array and string category formats
+    const allCategories = products.flatMap((p) => 
+      Array.isArray(p.category) ? p.category : [p.category]
+    );
+    return [...new Set(allCategories.filter(Boolean))];
+  }, [products]);
 
-  // --- 2. FILTERING & SORTING LOGIC ---
-  // --- 2. FILTERING & SORTING LOGIC ---
-  useEffect(() => {
+  // --- 2. FILTERING & SORTING LOGIC (using useMemo instead of useEffect) ---
+  const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // A. Filter by Category
+    // A. Filter by Category (handle both array and string formats)
     if (selectedCategories.length > 0) {
-      result = result.filter((p) => selectedCategories.includes(p.category));
+      result = result.filter((p) => {
+        const productCategories = Array.isArray(p.category) ? p.category : [p.category];
+        return selectedCategories.some(cat => productCategories.includes(cat));
+      });
     }
 
     // B. Filter by Price
@@ -52,14 +64,17 @@ const Shop = () => {
     } else if (sortOption === "price-desc") {
       result.sort((a, b) => b.price - a.price);
     } else {
-      // Default: Newest (Assuming higher ID = newer)
-      result.sort((a, b) => b.id - a.id);
+      // Default: Newest (by created_at or id)
+      result.sort((a, b) => {
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at) - new Date(a.created_at);
+        }
+        return b.id - a.id;
+      });
     }
 
-    setFilteredProducts(result);
-    setVisibleCount(6); // Reset visible count when filters change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategories, selectedPriceRanges, sortOption, products]); // <--- FIX: Added 'products' here
+    return result;
+  }, [selectedCategories, selectedPriceRanges, sortOption, products]);
 
   // --- HANDLERS ---
   const toggleCategory = (category) => {
@@ -68,6 +83,7 @@ const Shop = () => {
         ? prev.filter((c) => c !== category)
         : [...prev, category]
     );
+    setVisibleCount(6); // Reset pagination when filter changes
   };
 
   const togglePrice = (range) => {
@@ -76,6 +92,13 @@ const Shop = () => {
         ? prev.filter((r) => r !== range)
         : [...prev, range]
     );
+    setVisibleCount(6); // Reset pagination when filter changes
+  };
+
+  const handleSortChange = (option) => {
+    setSortOption(option);
+    setVisibleCount(6); // Reset pagination when sort changes
+    setIsSortOpen(false);
   };
 
   const loadMore = () => {
@@ -143,7 +166,7 @@ const Shop = () => {
                 {Object.keys(sortLabel).map((key) => (
                   <button
                     key={key}
-                    onClick={() => { setSortOption(key); setIsSortOpen(false); }}
+                    onClick={() => handleSortChange(key)}
                     className={`w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-widest hover:bg-gray-50 transition-colors ${sortOption === key ? 'text-black bg-gray-50' : 'text-gray-500'}`}
                   >
                     {sortLabel[key]}
@@ -232,13 +255,23 @@ const Shop = () => {
 
         {/* Product Grid */}
         <div className="flex-grow">
-          {filteredProducts.length > 0 ? (
+          {/* Loading State */}
+          {productsLoading && (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center">
+                <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-xs uppercase tracking-widest text-gray-400">Loading products...</p>
+              </div>
+            </div>
+          )}
+
+          {!productsLoading && filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
               {filteredProducts.slice(0, visibleCount).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
-          ) : (
+          ) : !productsLoading && (
             <div className="text-center py-20">
               <p className="text-gray-400 text-sm uppercase tracking-widest">No products found matching your filters.</p>
               <button 

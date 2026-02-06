@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Star,
   Minus,
@@ -8,12 +8,16 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { products } from "../utils/products";
-import {useCartStore} from "../stores/cartStore";
+import { useProductStore } from "../stores/productStore";
+import { useCartStore } from "../stores/cartStore";
 
 const Product = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+
+  // --- STORES ---
+  const { products, fetchProducts, getProductById, isLoading } = useProductStore();
+  const { addToCart, clearCart } = useCartStore();
 
   // --- STATE ---
   const [selectedImage, setSelectedImage] = useState(0);
@@ -21,21 +25,49 @@ const Product = () => {
   const [quantity, setQuantity] = useState(1);
   const [openSection, setOpenSection] = useState("description");
   const [showPopup, setShowPopup] = useState(false);
-  const { addToCart, clearCart } = useCartStore();
 
-  const product = products.find(p => p.id == id);
+  // Fetch products if not loaded
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
-  React.useEffect(() => {
-    if (product) {
-      setSelections({
-        [product.options[0].name]: product.options[0].values[0].label || product.options[0].values[0],
-        [product.options[1].name]: product.options[1].values[0].label || product.options[1].values[0],
+  const product = getProductById(id);
+
+  useEffect(() => {
+    if (product && product.options && product.options.length > 0) {
+      const initialSelections = {};
+      product.options.forEach((opt) => {
+        if (opt.values && opt.values.length > 0) {
+          initialSelections[opt.name] = opt.values[0].label || opt.values[0];
+        }
       });
+      setSelections(initialSelections);
     }
   }, [product]);
 
+  if (isLoading) {
+    return (
+      <div className="bg-white min-h-screen pt-10 pb-20 px-4 md:px-6 max-w-7xl mx-auto flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-xs uppercase tracking-widest text-gray-400">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!product) {
-    return <div className="bg-white min-h-screen pt-10 pb-20 px-4 md:px-6 max-w-7xl mx-auto text-center">Product not found</div>;
+    return (
+      <div className="bg-white min-h-screen pt-10 pb-20 px-4 md:px-6 max-w-7xl mx-auto text-center">
+        <p className="text-gray-500">Product not found</p>
+        <button
+          onClick={() => navigate("/shop")}
+          className="mt-4 px-6 py-2 bg-black text-white text-xs font-bold uppercase tracking-widest"
+        >
+          Back to Shop
+        </button>
+      </div>
+    );
   }
 
   // --- HANDLERS ---
