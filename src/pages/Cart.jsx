@@ -1,10 +1,11 @@
-import React from 'react';
-import { Trash2, Minus, Plus, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useCartStore } from '../stores/cartStore';
+import React from "react";
+import { Trash2, Minus, Plus, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useCartStore } from "../stores/cartStore";
 
 const Cart = () => {
-  const { cartItems, updateQuantity, removeFromCart, getCartTotal } = useCartStore();
+  const { cartItems, updateQuantity, removeFromCart, getCartTotal } =
+    useCartStore();
 
   // const updateQuantity = (id, change) => {
   //   setCartItems(items => items.map(item => {
@@ -21,25 +22,38 @@ const Cart = () => {
   // };
 
   const subtotal = getCartTotal();
-  const shipping = subtotal > 0 ? subtotal > 100 ? 0 : 15 : 0;
+  const shipping = subtotal > 0 ? (subtotal > 100 ? 0 : 15) : 0;
   const total = subtotal + shipping;
 
   return (
     <div className="bg-white min-h-screen pt-10 pb-20 px-4 md:px-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl md:text-4xl font-light uppercase tracking-widest mb-8 md:mb-12 text-center md:text-left">Shopping Cart</h1>
+      <Link
+        to="/"
+        className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-black mt-6"
+      >
+        <ArrowLeft className="w-4 h-4" /> Continue Shopping
+      </Link>
+      <h1 className="text-3xl md:text-4xl font-light uppercase tracking-widest mb-8 md:mb-12 text-center md:text-left mt-3">
+        Shopping Cart
+      </h1>
 
       <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
-        
         {/* Cart Items List */}
         <div className="flex-grow">
           {cartItems.length === 0 ? (
             <div className="text-center py-20 border-t border-b border-gray-100">
-              <p className="text-gray-500 mb-6">Your cart is currently empty.</p>
-              <Link to="/" className="text-xs font-bold uppercase tracking-widest border-b border-black pb-1 hover:text-gray-600">Continue Shopping</Link>
+              <p className="text-gray-500 mb-6">
+                Your cart is currently empty.
+              </p>
+              <Link
+                to="/"
+                className="text-xs font-bold uppercase tracking-widest border-b border-black pb-1 hover:text-gray-600"
+              >
+                Continue Shopping
+              </Link>
             </div>
           ) : (
             <div className="space-y-6 md:space-y-8">
-              
               {/* Table Headers - Hidden on Mobile */}
               <div className="hidden md:grid grid-cols-12 text-xs font-bold uppercase tracking-widest text-gray-400 border-b border-gray-200 pb-4 mb-4">
                 <div className="col-span-6">Product</div>
@@ -49,40 +63,76 @@ const Cart = () => {
 
               {/* Items */}
               {cartItems.map((item) => (
-                <div key={item.cartId} className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center border-b border-gray-100 pb-6 md:pb-8 gap-4 md:gap-0">
-                  
+                <div
+                  key={item.cartId}
+                  className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center border-b border-gray-100 pb-6 md:pb-8 gap-4 md:gap-0"
+                >
                   {/* Product Info */}
                   <div className="col-span-6 flex gap-4 md:gap-6 w-full">
                     <div className="w-24 h-24 md:w-24 md:h-24 bg-gray-100 flex-shrink-0">
-                      <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    
+
                     <div className="flex flex-col justify-between py-1 w-full">
                       <div className="flex justify-between md:block gap-3">
-                        <h3 className="text-sm font-bold uppercase tracking-wide">{item.title}</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-wide">
+                          {item.title}
+                        </h3>
                         {/* Mobile Price Display */}
-                        <span className="md:hidden text-sm font-medium">${(item.price * item.quantity).toFixed(2)}</span>
-                      </div>
-                      
-                      <p className=" text-xs text-gray-500 mt-1">
-                        {Object.entries(item.selectedOptions).map(([value]) => `${value}`).join(' | ')}
-                      </p>
-                      <p className="hidden md:block text-xs text-gray-500 mt-1">${item.price.toFixed(2)}</p>
-                      
-                      {/* Mobile Controls Container */}
-                      <div className="md:hidden flex justify-between items-center mt-4">
-                         <div className="flex items-center border border-gray-200">
-                            <button onClick={() => updateQuantity(item.cartId, item.quantity - 1)} className="p-2 hover:bg-gray-50 text-gray-500"><Minus className="w-3 h-3" /></button>
-                            <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.cartId, item.quantity + 1)} className="p-2 hover:bg-gray-50 text-gray-500"><Plus className="w-3 h-3" /></button>
-                          </div>
-                          <button onClick={() => removeFromCart(item.cartId)} className="text-xs text-red-400 hover:text-red-600 uppercase tracking-wider flex items-center gap-1">
-                             <Trash2 className="w-4 h-4" />
-                          </button>
+                        <span className="md:hidden text-sm font-medium">
+                          ${(item.price * item.quantity).toFixed(2)}
+                        </span>
                       </div>
 
-                       {/* Desktop Remove Button */}
-                      <button onClick={() => removeFromCart(item.cartId)} className="hidden md:flex text-xs text-red-400 hover:text-red-600 uppercase tracking-wider items-center gap-1 w-fit mt-2">
+                      <p className=" text-xs text-gray-500 mt-1">
+                        {Object.entries(item.selectedOptions)
+                          .map(([value]) => `${value}`)
+                          .join(" | ")}
+                      </p>
+                      <p className="hidden md:block text-xs text-gray-500 mt-1">
+                        ${item.price.toFixed(2)}
+                      </p>
+
+                      {/* Mobile Controls Container */}
+                      <div className="md:hidden flex justify-between items-center mt-4">
+                        <div className="flex items-center border border-gray-200">
+                          <button
+                            onClick={() =>
+                              updateQuantity(item.cartId, item.quantity - 1)
+                            }
+                            className="p-2 hover:bg-gray-50 text-gray-500"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="w-8 text-center text-sm font-medium">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() =>
+                              updateQuantity(item.cartId, item.quantity + 1)
+                            }
+                            className="p-2 hover:bg-gray-50 text-gray-500"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.cartId)}
+                          className="text-xs text-red-400 hover:text-red-600 uppercase tracking-wider flex items-center gap-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Desktop Remove Button */}
+                      <button
+                        onClick={() => removeFromCart(item.cartId)}
+                        className="hidden md:flex text-xs text-red-400 hover:text-red-600 uppercase tracking-wider items-center gap-1 w-fit mt-2"
+                      >
                         <Trash2 className="w-3 h-3" /> Remove
                       </button>
                     </div>
@@ -91,22 +141,36 @@ const Cart = () => {
                   {/* Desktop Quantity Control */}
                   <div className="hidden md:flex col-span-3 justify-center">
                     <div className="flex items-center border border-gray-200">
-                      <button onClick={() => updateQuantity(item.cartId, item.quantity - 1)} className="p-2 hover:bg-gray-50 text-gray-500"><Minus className="w-3 h-3" /></button>
-                      <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.cartId, item.quantity + 1)} className="p-2 hover:bg-gray-50 text-gray-500"><Plus className="w-3 h-3" /></button>
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.cartId, item.quantity - 1)
+                        }
+                        className="p-2 hover:bg-gray-50 text-gray-500"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="w-8 text-center text-sm font-medium">
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.cartId, item.quantity + 1)
+                        }
+                        className="p-2 hover:bg-gray-50 text-gray-500"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
                     </div>
                   </div>
 
                   {/* Desktop Item Total */}
                   <div className="hidden md:block col-span-3 text-right">
-                    <span className="text-sm font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="text-sm font-medium">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </span>
                   </div>
                 </div>
               ))}
-
-              <Link to="/" className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-black mt-6">
-                <ArrowLeft className="w-4 h-4" /> Continue Shopping
-              </Link>
             </div>
           )}
         </div>
@@ -114,8 +178,10 @@ const Cart = () => {
         {/* Order Summary */}
         <div className="w-full lg:w-96 flex-shrink-0">
           <div className="bg-gray-50 p-6 md:p-8">
-            <h2 className="text-lg font-bold uppercase tracking-widest mb-6">Order Summary</h2>
-            
+            <h2 className="text-lg font-bold uppercase tracking-widest mb-6">
+              Order Summary
+            </h2>
+
             <div className="space-y-4 text-sm mb-8 border-b border-gray-200 pb-8">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
@@ -123,11 +189,18 @@ const Cart = () => {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Shipping</span>
-                <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
+                <span>
+                  {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+                </span>
               </div>
-              {subtotal < 100 && <div className='flex items-center'>
-                <p className='text-green-600 italic'>* Spend ${Math.max(0, 100 - subtotal).toFixed(2)} more to get Free Shipping</p>
-              </div>}
+              {subtotal < 100 && subtotal !== 0 && (
+                <div className="flex items-center">
+                  <p className="text-green-600 italic">
+                    * Spend ${Math.max(0, 100 - subtotal).toFixed(2)} more to
+                    get Free Shipping
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-between text-lg font-medium mb-8">
@@ -136,7 +209,10 @@ const Cart = () => {
             </div>
 
             {/* Checkout Button */}
-            <Link to="/user/checkout" className="w-full group relative px-8 py-4 border border-black overflow-hidden bg-white text-black inline-block">
+            <Link
+              to="/user/checkout"
+              className="w-full group relative px-8 py-4 border border-black overflow-hidden bg-white text-black inline-block"
+            >
               <span className="absolute inset-0 w-full h-full bg-black translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0"></span>
               <span className="relative z-10 w-full flex justify-center items-center text-xs font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300">
                 <span>Checkout</span>
@@ -148,7 +224,6 @@ const Cart = () => {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

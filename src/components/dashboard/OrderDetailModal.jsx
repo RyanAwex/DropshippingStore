@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   X,
   Package,
@@ -12,9 +12,14 @@ import {
   MapPin,
   Image as ImageIcon,
 } from "lucide-react";
+import { useOrderStore } from "../../stores/orderStore";
 
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
+
+  const { updateOrderStatus } = useOrderStore();
+  const [currentStatus, setCurrentStatus] = useState(order.status);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -26,9 +31,46 @@ const OrderDetailModal = ({ order, onClose }) => {
         return "bg-yellow-50 text-yellow-700 border-yellow-200";
       case "cancelled":
         return "bg-red-50 text-red-600 border-red-200";
+      case "refunded":
+        return "bg-purple-50 text-purple-600 border-purple-200";
       default:
         return "bg-gray-50 text-gray-600 border-gray-200";
     }
+  };
+
+  const handleOrderStatus = async () => {
+    if (isUpdating || currentStatus === "delivered") return;
+
+    let newStatus = "";
+    if (currentStatus === "pending") {
+      newStatus = "processing";
+    } else if (currentStatus === "processing") {
+      newStatus = "shipped";
+    } else if (currentStatus === "shipped") {
+      newStatus = "delivered";
+    }
+
+    if (newStatus) {
+      setIsUpdating(true);
+      const result = await updateOrderStatus(order.id, newStatus);
+      if (result.success) {
+        setCurrentStatus(newStatus);
+      }
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCancelRefund = async () => {
+    if (isUpdating) return;
+
+    const newStatus = currentStatus === "delivered" ? "refunded" : "cancelled";
+
+    setIsUpdating(true);
+    const result = await updateOrderStatus(order.id, newStatus);
+    if (result.success) {
+      setCurrentStatus(newStatus);
+    }
+    setIsUpdating(false);
   };
 
   const getPaymentIcon = (provider) => {
@@ -76,11 +118,30 @@ const OrderDetailModal = ({ order, onClose }) => {
           <div className="flex-grow overflow-y-auto p-6 space-y-6 custom-scrollbar">
             {/* Status & Date Row */}
             <div className="flex flex-wrap gap-4 items-center justify-between">
-              <span
-                className={`text-[10px] font-bold px-4 py-2 uppercase tracking-widest border ${getStatusColor(order.status)}`}
-              >
-                {order.status || "Pending"}
-              </span>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleOrderStatus}
+                  disabled={
+                    isUpdating ||
+                    currentStatus === "delivered" ||
+                    currentStatus === "cancelled" ||
+                    currentStatus === "refunded"
+                  }
+                  className={`text-[10px] font-bold px-4 py-2 uppercase tracking-widest border transition-all ${getStatusColor(currentStatus)} ${currentStatus === "delivered" || currentStatus === "cancelled" || currentStatus === "refunded" ? "cursor-not-allowed opacity-75" : "cursor-pointer hover:opacity-80"} ${isUpdating ? "opacity-50" : ""}`}
+                >
+                  {isUpdating ? "Updating..." : currentStatus}
+                </button>
+                {currentStatus !== "cancelled" &&
+                  currentStatus !== "refunded" && (
+                    <button
+                      onClick={handleCancelRefund}
+                      disabled={isUpdating}
+                      className="text-[10px] font-bold px-4 py-2 uppercase tracking-widest border border-red-200 bg-red-50 text-red-600 transition-all hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {currentStatus === "delivered" ? "Refund" : "Cancel"}
+                    </button>
+                  )}
+              </div>
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <Clock className="w-4 h-4" />
                 <span>
@@ -114,7 +175,9 @@ const OrderDetailModal = ({ order, onClose }) => {
                 </div>
                 <div className="flex items-center gap-3 text-xs">
                   <Mail className="w-4 h-4 text-gray-400" />
-                  <span className="truncate">{order.shipping_info?.email || "N/A"}</span>
+                  <span className="truncate">
+                    {order.shipping_info?.email || "N/A"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 text-xs">
                   <Phone className="w-4 h-4 text-gray-400" />
@@ -133,21 +196,27 @@ const OrderDetailModal = ({ order, onClose }) => {
                   <Globe className="w-4 h-4 text-gray-400 mt-0.5" />
                   <div>
                     <p className="font-bold uppercase">Country</p>
-                    <p className="text-gray-500">{order.shipping_info?.country || "N/A"}</p>
+                    <p className="text-gray-500">
+                      {order.shipping_info?.country || "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Home className="w-4 h-4 text-gray-400 mt-0.5" />
                   <div>
                     <p className="font-bold uppercase">City</p>
-                    <p className="text-gray-500">{order.shipping_info?.city || "N/A"}</p>
+                    <p className="text-gray-500">
+                      {order.shipping_info?.city || "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 sm:col-span-2">
                   <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
                   <div>
                     <p className="font-bold uppercase">Address</p>
-                    <p className="text-gray-500">{order.shipping_info?.address || "N/A"}</p>
+                    <p className="text-gray-500">
+                      {order.shipping_info?.address || "N/A"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -180,7 +249,8 @@ const OrderDetailModal = ({ order, onClose }) => {
             {/* Order Items */}
             <div className="space-y-4">
               <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
-                <Package className="w-4 h-4" /> Order Items ({order.items?.length || 0})
+                <Package className="w-4 h-4" /> Order Items (
+                {order.items?.length || 0})
               </h4>
               <div className="space-y-3">
                 {order.items?.map((item, idx) => (

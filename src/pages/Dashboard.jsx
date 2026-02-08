@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Clock,
   Eye,
+  ArrowLeft,
 } from "lucide-react";
 import { useProductStore } from "../stores/productStore";
 import { useOrderStore } from "../stores/orderStore";
@@ -22,6 +23,7 @@ import {
   ProductDrawer,
   OrderDetailModal,
 } from "../components/dashboard";
+import { Link } from "react-router-dom";
 
 // --- MAIN DASHBOARD ---
 const Dashboard = () => {
@@ -135,9 +137,17 @@ const Dashboard = () => {
 
       <main className="flex-1 lg:ml-64 p-6 lg:p-12 transition-all duration-300">
         <div className="lg:hidden mb-8 flex justify-between items-center">
-          <span className="text-xl font-bold uppercase tracking-widest">
-            Vraxia Admin
-          </span>
+          <div className="space-y-2">
+            <Link
+              to="/"
+              className="flex items-center text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-black transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" /> Return to Home
+            </Link>
+            <span className="text-xl font-bold uppercase tracking-widest">
+              Vraxia Admin
+            </span>
+          </div>
           <button
             onClick={() => setIsMobileOpen(true)}
             className="p-2 bg-white rounded border border-gray-300 shadow-lg hover:opacity-60 cursor-pointer transition-all duration-200 "

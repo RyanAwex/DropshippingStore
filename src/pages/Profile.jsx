@@ -54,7 +54,7 @@ const Profile = () => {
   }, [fetchOrders]);
 
   return (
-    <div className="bg-white min-h-screen pt-10 pb-20 px-6 max-w-7xl mx-auto">
+    <div className="bg-white min-h-screen pt-10 pb-20 px-3 sm:px-6 max-w-7xl mx-auto">
       {/* Page Header */}
       <div className="mb-12 border-b border-gray-100 pb-6">
         <Link
@@ -71,7 +71,7 @@ const Profile = () => {
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-12 lg:gap-24">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-24">
         {/* --- LEFT SIDEBAR: USER INFO & NAV --- */}
         <aside className="w-full lg:w-64 flex-shrink-0 space-y-10">
           {/* User Profile "Image" */}
@@ -138,7 +138,7 @@ const Profile = () => {
         </aside>
 
         {/* --- RIGHT CONTENT AREA --- */}
-        <main className="flex-grow">
+        <main className="flex-grow w-full">
           {/* TAB: ORDERS */}
           {activeTab === "orders" && (
             <div className="space-y-6 animation-fade-in">

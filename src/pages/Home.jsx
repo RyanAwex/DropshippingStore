@@ -6,15 +6,21 @@ import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import BenefitsStrip from "../components/BenefitsStrip";
 import { useAuthStore } from "../stores/authStore";
+import { useCartStore } from "../stores/cartStore";
 
 const Home = () => {
   // --- States ---
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false); // New State for Mobile Menu
   const { logout, isAuthenticated, checkAuth, isLoading } = useAuthStore();
-  const { products, fetchProducts, isLoading: productsLoading } = useProductStore();
+  const {
+    products,
+    fetchProducts,
+    isLoading: productsLoading,
+  } = useProductStore();
   const profileRef = useRef(null);
   const isAdmin = useAuthStore((s) => s.isAdmin);
+  const { getCartItemCount } = useCartStore();
 
   // Check auth and fetch products on mount
   useEffect(() => {
@@ -40,6 +46,11 @@ const Home = () => {
     } else {
       document.body.style.overflow = "unset";
     }
+
+    // Cleanup on unmount to ensure scroll is re-enabled
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [isMenuOpen]);
 
   return (
@@ -59,7 +70,7 @@ const Home = () => {
 
         <div className="flex flex-col p-8 space-y-6 overflow-y-auto h-full">
           {/* Main Links */}
-          <nav className="flex flex-col space-y-6 text-xl font-light uppercase tracking-widest">
+          <nav className="flex flex-col space-y-6 text-lg font-light uppercase tracking-widest">
             <NavLink
               to="/"
               onClick={() => setIsMenuOpen(false)}
@@ -112,22 +123,6 @@ const Home = () => {
                   >
                     Profile
                   </Link>
-
-                  {!isLoading ? (
-                    <button
-                      onClick={() => logout()}
-                      className="w-full py-3 bg-black text-white text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-800 transition-colors"
-                    >
-                      Logout
-                    </button>
-                  ) : (
-                    <button
-                      disabled
-                      className="w-full py-3 bg-gray-300 text-white text-xs font-bold uppercase tracking-widest text-center cursor-not-allowed"
-                    >
-                      Logging Out...
-                    </button>
-                  )}
                 </>
               ) : (
                 <>
@@ -180,9 +175,16 @@ const Home = () => {
         <div className="flex items-center space-x-6">
           <Search className="w-5 h-5 cursor-pointer hover:text-black transition-colors" />
 
-          <Link to="/user/cart">
-            <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-black transition-colors" />
-          </Link>
+          <div className="relative flex items-center justify-center">
+            <Link to="/user/cart">
+              <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-black transition-colors" />
+            </Link>
+            {getCartItemCount() > 0 && (
+              <div className="absolute -top-2 -right-2 w-4 h-4 bg-black rounded-full flex items-center justify-center text-white text-[12px] font-semibold">
+                {getCartItemCount()}
+              </div>
+            )}
+          </div>
 
           <div className="hidden md:block relative" ref={profileRef}>
             <button
@@ -210,14 +212,14 @@ const Home = () => {
                         >
                           Dashboard
                         </Link>
-                      )} 
-                        <Link
-                          to="/user/profile"
-                          className="w-full py-3 border border-black text-black text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-50 transition-colors"
-                        >
-                          Profile
-                        </Link>
-                      {!isLoading ? (
+                      )}
+                      <Link
+                        to="/user/profile"
+                        className="w-full py-3 border border-black text-black text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-50 transition-colors"
+                      >
+                        Profile
+                      </Link>
+                      {/* {!isLoading ? (
                         <button
                           onClick={() => logout()}
                           className="w-full py-3 bg-black text-white text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-800 transition-colors"
@@ -231,7 +233,7 @@ const Home = () => {
                         >
                           Logging Out...
                         </button>
-                      )}
+                      )} */}
                     </>
                   ) : (
                     <>
@@ -280,7 +282,7 @@ const Home = () => {
           />
         </div>
         <div className="relative z-10 max-w-2xl px-6">
-          <h1 className="text-4xl md:text-6xl font-light mb-8 text-white drop-shadow-lg tracking-tight uppercase">
+          <h1 className="text-4xl font-bold md:text-6xl sm:font-light mb-8 text-white drop-shadow-lg tracking-tight uppercase">
             Essentials for
             <br />
             Modern Living
@@ -309,7 +311,9 @@ const Home = () => {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-xs uppercase tracking-widest text-gray-400">Loading products...</p>
+              <p className="text-xs uppercase tracking-widest text-gray-400">
+                Loading products...
+              </p>
             </div>
           </div>
         )}

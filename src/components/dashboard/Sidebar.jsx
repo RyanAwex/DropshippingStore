@@ -1,5 +1,6 @@
 import React from "react";
-import { LayoutDashboard, Package, ShoppingBag } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Package, ShoppingBag } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Sidebar = ({
   activeTab,
@@ -27,7 +28,13 @@ const Sidebar = ({
       `}
       >
         <div>
-          <div className="p-8 border-b border-gray-800">
+          <div className="p-8 border-b border-gray-800 space-y-1">
+            <Link
+              to="/"
+              className="flex items-center text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" /> Return to Home
+            </Link>
             <h1 className="text-2xl font-bold tracking-widest uppercase text-white">
               Vraxia<span className="text-gray-500">.Admin</span>
             </h1>

@@ -13,35 +13,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { coupons } from "../utils/coupons"; // Ensure this path matches your project structure
 import { useCartStore } from "../stores/cartStore";
 import { useAuthStore } from "../stores/authStore";
+import { Paypal, GPay, ApplePay } from "../utils/svg";
 import supabase from "../utils/supabase";
-
-// --- Custom Brand Icons (Inline SVGs) ---
-const GooglePayIcon = ({ className }) => (
-  <svg viewBox="0 0 40 16" fill="currentColor" className={className}>
-    <path d="M6.3 6.6c0-.4 0-.8-.1-1.2H0v2.4h3.6c-.2 1-.8 1.9-1.7 2.5v2.1h2.7c1.6-1.5 2.5-3.7 2.5-6.2z" />
-    <path d="M16.5 6.8c0-.5-.1-1-.2-1.4h-3.8v6h1.6v-4.6h2.2c1.2 0 2.1.9 2.1 2.2v2.4h1.6v-2.5c0-1.2-.9-2.1-3.5-2.1z" />
-    <path d="M22.2 2.7h-1.6v10.1h1.6V2.7z" />
-    <path d="M28.7 2.7l-4.7 10.1h1.7l1-2h6l.9 2H35l-4.5-10.1h-1.8zm-1.3 6.9l2.1-4.6 2.1 4.6h-4.2z" />
-    <path d="M37.5 5.3h-1.6v2c0 1.2.9 2.1 2.2 2.1 1.2 0 2.1-.9 2.1-2.1v-2h-1.6v2.1c0 .4-.3.6-.6.6-.4 0-.6-.3-.6-.6V5.3z" />
-  </svg>
-);
-
-const ApplePayIcon = ({ className }) => (
-  <svg viewBox="0 0 38 16" fill="currentColor" className={className}>
-    <path d="M5.8 6.5c-1.3 0-2.3 1.1-2.3 2.5s1 2.6 2.3 2.6c1.3 0 2.3-1.1 2.3-2.5.1-1.5-1-2.6-2.3-2.6m0 4c-.7 0-1.1-.6-1.1-1.4S5.1 7.7 5.8 7.7c.7 0 1.1.6 1.1 1.4s-.4 1.4-1.1 1.4m11.8-4c-1.3 0-2.3 1.1-2.3 2.5s1 2.6 2.3 2.6c1.3 0 2.3-1.1 2.3-2.5.1-1.5-1-2.6-2.3-2.6m0 4c-.7 0-1.1-.6-1.1-1.4S17 7.7 17.6 7.7c.7 0 1.1.6 1.1 1.4s-.3 1.4-1.1 1.4M9.5 6.6H8.3v5h1.2V9.3h.8c1.3 0 2.1-.8 2.1-2s-.8-2-2.1-2H9.5v1.3zm.8 1.8h-.8V7.7h.8c.6 0 1 .3 1 .9s-.4.8-1 .8m15.5-2h-1.5l-2.2 5h1.3l.4-1h2.5l.4 1h1.3l-2.2-5zm-1.6 3l.8-2.1.8 2.1h-1.6zm-16.7-6C7.2 3.6 6.9 4 6.9 4.5c0 .6.4 1 1 1 .5 0 1-.5 1-1 0-.5-.4-1.1-1.4-1.1" />
-  </svg>
-);
-
-const PayPalIcon = ({ className }) => (
-  <svg viewBox="0 0 40 16" fill="currentColor" className={className}>
-    <path d="M4.3 1.8h4.5c2.4 0 3.3 1.2 3.3 3 0 1.6-1 2.8-3.1 2.8H6.1L5.3 11H3l1.3-9.2zm2.1 4.5h1c.9 0 1.3-.4 1.3-1.3 0-.7-.4-1.1-1.2-1.1H6l.4 2.4z" />
-    <path d="M13.9 4.3h1.7l-1.1 6.8h-1.6l1-6.8z" />
-    <path d="M19.9 4.3l-2.2 6.8h-1.7l.8-2.6-1.5-4.2h1.8l.6 2.2 2-2.2h.2z" />
-    <path d="M23.1 1.8h4.5c2.4 0 3.3 1.2 3.3 3 0 1.6-1 2.8-3.1 2.8h-1.9l-.8 3.5h-2.3l1.3-9.3zm2.1 4.5h1c.9 0 1.3-.4 1.3-1.3 0-.7-.4-1.1-1.2-1.1h-1.5l.4 2.4z" />
-    <path d="M33.6 11l-.2-1c-.5.7-1.4 1.2-2.3 1.2-1.4 0-2.2-1.1-2.2-2.6 0-2.2 1.6-4.5 4-4.5.8 0 1.4.2 1.7.6l.2-1.5h1.6l-1.5 7.8h-1.3zm.2-4.1c-.2-.3-.6-.5-1-.5-1.4 0-2.3 1.5-2.3 2.9 0 .8.4 1.3 1.1 1.3.4 0 .9-.3 1.2-.6l1-3.1z" />
-    <path d="M38.7 11.1h-1.6V.8h1.6v10.3z" />
-  </svg>
-);
 
 // --- Custom Expiration Picker ---
 const ExpirationDatePicker = () => {
@@ -149,96 +122,119 @@ const PaymentButton = ({ id, label, icon: Icon, isSelected, onSelect }) => (
 
 const OrderSuccess = ({ order, countdown }) => {
   return (
-    <div className="fixed inset-0 z-[200] bg-white flex items-center justify-center animation-fade-in">
-      <div className="max-w-md w-full mx-auto px-6 text-center">
-        {/* Animated checkmark */}
-        <div className="mb-8 flex justify-center">
-          <div className="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center animate-bounce">
-            <CheckCircle className="w-10 h-10" />
-          </div>
-        </div>
-
-        <h1 className="text-3xl font-light uppercase tracking-widest mb-3">
-          Order Placed
-        </h1>
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-8">
-          Thank you for your purchase
-        </p>
-
-        {/* Order info card */}
-        <div className="bg-gray-50 border border-gray-200 p-6 mb-8 text-left space-y-4">
-          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-            <div className="p-2 bg-black text-white">
-              <Package className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                Order ID
-              </p>
-              <p className="text-xs font-mono text-gray-600">#{order.id}</p>
+    <div className="fixed inset-0 z-[200] bg-white flex flex-col h-screen overflow-hidden animation-fade-in">
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-md w-full mx-auto px-6 py-8 flex flex-col items-center justify-center min-h-full">
+          {/* Animated checkmark */}
+          <div className="mb-5 flex justify-center">
+            <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center animate-bounce">
+              <CheckCircle className="w-8 h-8" />
             </div>
           </div>
 
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
-              Customer
-            </p>
-            <p className="text-sm font-medium">{order.fullName}</p>
-          </div>
-
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
-              Items
-            </p>
-            <div className="space-y-2">
-              {order.items.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white border border-gray-200 overflow-hidden flex-shrink-0">
-                    {item.image && (
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
-                  <span className="text-xs font-medium uppercase tracking-wide flex-grow">
-                    {item.title}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    ×{item.quantity}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center border-t border-gray-100 pt-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-              Total
-            </p>
-            <p className="text-lg font-medium">${order.total.toFixed(2)}</p>
-          </div>
-        </div>
-
-        <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-          Your order has been successfully submitted. Our team will start
-          preparing it right away.
-        </p>
-
-        {/* Countdown */}
-        <div className="space-y-3">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-            Redirecting to your profile in
+          <h1 className="text-2xl font-light uppercase tracking-widest mb-2 text-center">
+            Order Placed
+          </h1>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-5 text-center">
+            Thank you for your purchase
           </p>
-          <div className="inline-flex items-center justify-center w-10 h-10 border border-black text-sm font-bold">
-            {countdown}
+
+          {/* Order info card */}
+          <div className="bg-gray-50 border border-gray-200 p-5 mb-5 text-left space-y-3 w-full">
+            <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
+              <div className="p-2 bg-black text-white">
+                <Package className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                  Order ID
+                </p>
+                <p className="text-xs font-mono text-gray-600">#{order.id}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">
+                  Customer
+                </p>
+                <p className="text-xs font-medium">{order.fullName}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">
+                  Contact
+                </p>
+                <p className="text-xs font-medium truncate">
+                  {order.shipping_info.email} <br />
+                  {order.shipping_info.phone}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">
+                Address
+              </p>
+              <p className="text-xs font-medium">
+                {order.shipping_info.address}, {order.shipping_info.city},{" "}
+                {order.shipping_info.country}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
+                Items
+              </p>
+              <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                {order.items.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-white border border-gray-200 overflow-hidden flex-shrink-0">
+                      {item.image && (
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <span className="text-xs font-medium uppercase tracking-wide flex-grow truncate">
+                      {item.title}
+                    </span>
+                    <span className="text-xs text-gray-500 flex-shrink-0">
+                      ×{item.quantity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center border-t border-gray-100 pt-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                Total
+              </p>
+              <p className="text-lg font-medium">${order.total.toFixed(2)}</p>
+            </div>
           </div>
-          <div className="w-full bg-gray-200 h-[2px] mt-4 overflow-hidden">
-            <div
-              className="h-full bg-black transition-all duration-1000 ease-linear"
-              style={{ width: `${((7 - countdown) / 7) * 100}%` }}
-            />
+
+          <p className="text-xs text-gray-500 mb-5 leading-relaxed text-center">
+            Your order has been successfully submitted. Our team will start
+            preparing it right away.
+          </p>
+
+          {/* Countdown */}
+          <div className="text-center w-full">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+              Redirecting to your profile in
+            </p>
+            <div className="inline-flex items-center justify-center w-9 h-9 border border-black text-sm font-bold mb-3">
+              {countdown}
+            </div>
+            <div className="w-full bg-gray-200 h-[2px] overflow-hidden">
+              <div
+                className="h-full bg-black transition-all duration-1000 ease-linear"
+                style={{ width: `${((7 - countdown) / 7) * 100}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -252,7 +248,7 @@ const Checkout = () => {
 
   // --- Stores ---
   const { isAuthenticated, user } = useAuthStore();
-  const { cartItems, getCartTotal } = useCartStore();
+  const { cartItems, getCartTotal, clearCart } = useCartStore();
 
   // user info
   const [firstName, setFirstName] = useState("");
@@ -367,10 +363,19 @@ const Checkout = () => {
         throw error;
       }
 
+      clearCart();
+
       // Show success screen with order details
       setOrderSuccess({
         id: Math.random().toString(36).substring(2, 10).toUpperCase(),
         fullName,
+        shipping_info: {
+          email,
+          phone,
+          country,
+          city,
+          address,
+        },
         items: cartItems,
         total,
       });
@@ -442,7 +447,7 @@ const Checkout = () => {
                   <input
                     type="text"
                     className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black rounded-none"
-                    placeholder="Alfred"
+                    placeholder="Doe"
                     onChange={(e) => {
                       setLastName(e.target.value);
                     }}
@@ -560,21 +565,21 @@ const Checkout = () => {
               <PaymentButton
                 id="paypal"
                 label="PayPal"
-                icon={PayPalIcon}
+                icon={Paypal}
                 isSelected={selectedPaymentMethod === "paypal"}
                 onSelect={setSelectedPaymentMethod}
               />
               <PaymentButton
                 id="google-pay"
                 label="G Pay"
-                icon={GooglePayIcon}
+                icon={GPay}
                 isSelected={selectedPaymentMethod === "google-pay"}
                 onSelect={setSelectedPaymentMethod}
               />
               <PaymentButton
                 id="apple-pay"
                 label="Apple Pay"
-                icon={ApplePayIcon}
+                icon={ApplePay}
                 isSelected={selectedPaymentMethod === "apple-pay"}
                 onSelect={setSelectedPaymentMethod}
               />

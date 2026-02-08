@@ -5,21 +5,25 @@ import { CATEGORIES } from "../../utils/categories";
 const CategorySelector = ({ selectedCategories = [], onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Ensure selectedCategories is always an array
+  const safeSelectedCategories = Array.isArray(selectedCategories)
+    ? selectedCategories
+    : [];
+
   // Helper to safely check category existence
-  const isSelected = (cat) =>
-    Array.isArray(selectedCategories) && selectedCategories.includes(cat);
+  const isSelected = (cat) => safeSelectedCategories.includes(cat);
 
   const toggleCategory = (cat) => {
     if (isSelected(cat)) {
-      onChange(selectedCategories.filter((c) => c !== cat));
+      onChange(safeSelectedCategories.filter((c) => c !== cat));
     } else {
-      onChange([...selectedCategories, cat]);
+      onChange([...safeSelectedCategories, cat]);
     }
   };
 
   const removeCategory = (e, cat) => {
     e.stopPropagation();
-    onChange(selectedCategories.filter((c) => c !== cat));
+    onChange(safeSelectedCategories.filter((c) => c !== cat));
   };
 
   return (
@@ -29,15 +33,15 @@ const CategorySelector = ({ selectedCategories = [], onChange }) => {
         onClick={() => setIsOpen(true)}
         className="w-full border border-gray-200 p-3 min-h-[50px] flex flex-wrap gap-2 cursor-pointer bg-white hover:border-black transition-colors items-center group"
       >
-        {!selectedCategories || selectedCategories.length === 0 ? (
+        {safeSelectedCategories.length === 0 ? (
           <span className="text-sm text-gray-400">Select Categories...</span>
         ) : (
-          selectedCategories.map((cat) => (
+          safeSelectedCategories.map((cat) => (
             <span
               key={cat}
               className="text-[10px] font-bold uppercase bg-gray-100 px-3 py-1 flex items-center gap-2 transition-all hover:bg-gray-200"
             >
-              {cat}
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
               <div
                 onClick={(e) => removeCategory(e, cat)}
                 className="hover:text-red-500 cursor-pointer"
@@ -62,7 +66,7 @@ const CategorySelector = ({ selectedCategories = [], onChange }) => {
                   Select Categories
                 </h3>
                 <p className="text-xs text-gray-400 mt-1 uppercase tracking-wide">
-                  {selectedCategories.length} Selected
+                  {safeSelectedCategories.length} Selected
                 </p>
               </div>
               <button
