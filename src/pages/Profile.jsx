@@ -36,7 +36,11 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState("orders");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const { user, logout } = useAuthStore();
-  const { fetchOrders, isLoading: ordersLoading } = useOrderStore();
+  const {
+    fetchOrders,
+    subscribeToOrders,
+    isLoading: ordersLoading,
+  } = useOrderStore();
   const navigate = useNavigate();
 
   const orders = useOrderStore((state) => state.orders);
@@ -50,8 +54,17 @@ const Profile = () => {
   };
 
   useEffect(() => {
+    // Fetch initial orders
     fetchOrders();
-  }, [fetchOrders]);
+
+    // Subscribe to real-time updates
+    const unsubscribe = subscribeToOrders();
+
+    // Cleanup: unsubscribe when component unmounts
+    return () => {
+      unsubscribe();
+    };
+  }, [fetchOrders, subscribeToOrders]);
 
   return (
     <div className="bg-white min-h-screen pt-10 pb-20 px-3 sm:px-6 max-w-7xl mx-auto">

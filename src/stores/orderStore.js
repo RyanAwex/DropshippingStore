@@ -41,9 +41,7 @@ export const useOrderStore = create((set, get) => ({
       if (error) throw error;
 
       set((state) => ({
-        orders: state.orders.map((o) =>
-          o.id === id ? { ...o, status } : o
-        ),
+        orders: state.orders.map((o) => (o.id === id ? { ...o, status } : o)),
       }));
 
       return { success: true, data };
@@ -56,10 +54,7 @@ export const useOrderStore = create((set, get) => ({
   // Delete an order
   deleteOrder: async (id) => {
     try {
-      const { error } = await supabase
-        .from("orders")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("orders").delete().eq("id", id);
 
       if (error) throw error;
 
@@ -78,15 +73,62 @@ export const useOrderStore = create((set, get) => ({
   getOrderStats: () => {
     const orders = get().orders;
     const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
-    const pendingOrders = orders.filter((o) => !o.status || o.status === "pending").length;
-    const completedOrders = orders.filter((o) => o.status === "delivered").length;
+    const totalRevenue = orders.reduce(
+      (sum, o) => sum + (Number(o.total_price) || 0),
+      0,
+    );
+    const pendingOrders = orders.filter(
+      (o) => !o.status || o.status === "pending",
+    ).length;
+    const completedOrders = orders.filter(
+      (o) => o.status === "delivered",
+    ).length;
 
     return {
       totalOrders,
       totalRevenue,
       pendingOrders,
       completedOrders,
+    };
+  },
+
+  // Subscribe to real-time order updates
+  subscribeToOrders: () => {
+    const channel = supabase
+      .channel("orders-channel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders" },
+        (payload) => {
+          const { eventType, new: newRecord, old: oldRecord } = payload;
+
+          set((state) => {
+            let updatedOrders = [...state.orders];
+
+            if (eventType === "INSERT") {
+              // Add new order at the beginning (since we order by created_at desc)
+              updatedOrders = [newRecord, ...updatedOrders];
+            } else if (eventType === "UPDATE") {
+              // Update existing order
+              updatedOrders = updatedOrders.map((order) =>
+                order.id === newRecord.id ? newRecord : order,
+              );
+            } else if (eventType === "DELETE") {
+              // Remove deleted order
+              updatedOrders = updatedOrders.filter(
+                (order) => order.id !== oldRecord.id,
+              );
+            }
+
+            return { orders: updatedOrders };
+          });
+        },
+      )
+      .subscribe();
+
+    // Return unsubscribe function
+    return () => {
+      supabase.removeChannel(channel);
     };
   },
 }));
